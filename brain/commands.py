@@ -1,16 +1,17 @@
 """
 =========================================================
 Project G-EXO
-Command Module
-Version : 0.5
+Command Router
+Version : 0.6
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
 
-import datetime
-
-from memory import remember, recall, forget, show_memory
 from logger import log
+
+from modules.calculator import calculate
+from modules.memory_commands import execute as memory_execute
+from modules.system_commands import execute as system_execute
 
 
 def execute(command):
@@ -24,179 +25,76 @@ def execute(command):
     # =====================================================
 
     if command.startswith("calculate "):
-
-        expression = command.replace("calculate ", "", 1)
-
-        try:
-
-            result = eval(expression)
-
-            print(f"\nResult = {result}\n")
-
-            log(f"Calculated: {expression} = {result}")
-
-        except Exception:
-
-            print("\nInvalid mathematical expression.\n")
-
-            log(f"Calculation Error: {expression}")
-
-        return True
+        return calculate(command)
 
     # =====================================================
-    # MEMORY
+    # MEMORY MODULE
     # =====================================================
 
-    elif command.startswith("remember "):
+    result = memory_execute(command)
 
-        text = command.replace("remember ", "", 1)
-
-        if " is " in text:
-
-            key, value = text.split(" is ", 1)
-
-            remember(key.strip(), value.strip())
-
-            log(f"Memory Saved: {key.strip()} = {value.strip()}")
-
-            print(f"\nOkay! I'll remember that {key.strip()} is {value.strip()}.\n")
-
-        else:
-
-            print("\nUsage:\nremember <key> is <value>\n")
-
-        return True
-
-    elif command.startswith("what is "):
-
-        key = command.replace("what is ", "", 1)
-
-        value = recall(key.strip())
-
-        if value:
-
-            print(f"\n{key.title()} = {value}\n")
-
-        else:
-
-            print("\nI don't know that yet.\n")
-
-        return True
-
-    elif command.startswith("forget "):
-
-        key = command.replace("forget ", "", 1)
-
-        if forget(key.strip()):
-
-            log(f"Memory Deleted: {key.strip()}")
-
-            print("\nMemory deleted.\n")
-
-        else:
-
-            print("\nI don't remember that.\n")
-
-        return True
-
-    elif command == "memory":
-
-        memory = show_memory()
-
-        if not memory:
-
-            print("\nMemory is empty.\n")
-
-        else:
-
-            print("\nStored Memories")
-            print("----------------")
-
-            for key, value in memory.items():
-
-                print(f"{key} : {value}")
-
-            print()
-
-        return True
+    if result is not None:
+        return result
 
     # =====================================================
-    # GREETING
+    # SYSTEM MODULE
     # =====================================================
 
-    elif command in ["hello", "hi", "hey"]:
+    result = system_execute(command)
 
-        print("\nHello, I am G-EXO.\n")
-
-    # =====================================================
-    # VERSION
-    # =====================================================
-
-    elif command == "version":
-
-        print("\nG-EXO Version 0.5\n")
-
-    # =====================================================
-    # DEVELOPER
-    # =====================================================
-
-    elif command in ["developer", "creator", "who made you"]:
-
-        print("\nDeveloper: Thatikonda Goutham Teja\n")
-
-    # =====================================================
-    # TIME
-    # =====================================================
-
-    elif command == "time":
-
-        now = datetime.datetime.now()
-
-        print("\nCurrent Time:", now.strftime("%I:%M:%S %p"))
-
-    # =====================================================
-    # DATE
-    # =====================================================
-
-    elif command == "date":
-
-        today = datetime.date.today()
-
-        print("\nToday's Date:", today)
+    if result is not None:
+        return result
 
     # =====================================================
     # HELP
     # =====================================================
 
-    elif command == "help":
+    if command == "help":
 
         print("""
-==================== COMMANDS ====================
+==================================================
+                    G-EXO HELP
+==================================================
 
+SYSTEM
+------
 hello
 version
 developer
 time
 date
+cpu
+ram
+disk
+battery
+system
 
+CALCULATOR
+----------
 calculate <expression>
 
+MEMORY
+------
 remember <key> is <value>
 what is <key>
 forget <key>
 memory
 
+OTHER
+-----
 help
 exit
 
 ==================================================
 """)
 
+        return True
+
     # =====================================================
     # EXIT
     # =====================================================
 
-    elif command in ["exit", "quit", "bye"]:
+    if command in ["exit", "quit", "bye"]:
 
         print("\nGoodbye!\n")
 
@@ -206,10 +104,8 @@ exit
     # UNKNOWN
     # =====================================================
 
-    else:
+    log(f"Unknown Command: {command}")
 
-        log(f"Unknown Command: {command}")
-
-        print("\nUnknown command.\n")
+    print("\nUnknown command.\n")
 
     return True
