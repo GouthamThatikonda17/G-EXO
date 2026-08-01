@@ -2,12 +2,14 @@
 =========================================================
 Project G-EXO
 Command Router
-Version : 1.2
+Version : 1.3
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
 
 from logger import log
+
+# ================= Modules =================
 
 from modules.calculator import execute as calculator_execute
 from modules.memory_commands import execute as memory_execute
@@ -17,17 +19,30 @@ from modules.web_commands import execute as web_execute
 from modules.file_manager import execute as file_execute
 from modules.notes_commands import execute as notes_execute
 from modules.tasks_commands import execute as tasks_execute
+from modules.reminders_commands import execute as reminders_execute
 
+# =====================================================
 
 MODULES = [
+
     calculator_execute,
+
     memory_execute,
+
     system_execute,
+
     app_execute,
+
     web_execute,
+
     file_execute,
+
     notes_execute,
+
     tasks_execute,
+
+    reminders_execute,
+
 ]
 
 
@@ -42,11 +57,17 @@ def execute(command):
         result = module(command)
 
         if result is not None:
+
             return result
+
+    # =====================================================
+    # HELP
+    # =====================================================
 
     if command == "help":
 
         print("""
+
 ==================================================
                     G-EXO HELP
 ==================================================
@@ -90,11 +111,10 @@ open youtube
 open github
 open gmail
 open chatgpt
-open google
 search <anything>
 
-FILE MANAGER
-------------
+FILES
+-----
 pwd
 list files
 create folder <name>
@@ -109,28 +129,40 @@ delete note <number>
 clear notes
 
 TODOS
------
+------
 todo <text>
 show todos
 complete todo <number>
 delete todo <number>
 clear todos
 
+REMINDERS
+----------
+reminder add YYYY-MM-DD HH:MM Message
+show reminders
+delete reminder <number>
+clear reminders
+
 OTHER
------
+------
 help
 exit
 
 ==================================================
+
 """)
 
         return True
+
+    # =====================================================
 
     if command in ["exit", "quit", "bye"]:
 
         print("\nGoodbye!\n")
 
         return False
+
+    # =====================================================
 
     log(f"Unknown Command: {command}")
 

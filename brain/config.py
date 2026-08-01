@@ -36,5 +36,6 @@ MEMORY_FILE = os.path.join(DATA_DIR, "memory.json")
 NOTES_FILE = os.path.join(DATA_DIR, "notes.json")
 
 TASKS_FILE = os.path.join(DATA_DIR, "tasks.json")
+REMINDERS_FILE = os.path.join(DATA_DIR, "reminders.json")
 
 LOG_FILE = os.path.join(LOG_DIR, "gexo.log")
