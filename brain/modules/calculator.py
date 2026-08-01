@@ -1,12 +1,21 @@
 """
-Calculator Module
+=========================================================
 Project G-EXO
+Calculator Module
+Version : 0.6
+Developer : Thatikonda Goutham Teja
+=========================================================
 """
 
 from logger import log
 
 
-def calculate(command):
+def execute(command):
+
+    command = command.lower().strip()
+
+    if not command.startswith("calculate "):
+        return None
 
     expression = command.replace("calculate ", "", 1)
 

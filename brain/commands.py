@@ -2,16 +2,17 @@
 =========================================================
 Project G-EXO
 Command Router
-Version : 0.6
+Version : 0.8
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
 
 from logger import log
 
-from modules.calculator import calculate
+from modules.calculator import execute as calculator_execute
 from modules.memory_commands import execute as memory_execute
 from modules.system_commands import execute as system_execute
+from modules.app_launcher import execute as app_execute
 
 
 def execute(command):
@@ -20,34 +21,21 @@ def execute(command):
 
     log(f"User Command: {command}")
 
-    # =====================================================
-    # CALCULATOR
-    # =====================================================
-
-    if command.startswith("calculate "):
-        return calculate(command)
-
-    # =====================================================
-    # MEMORY MODULE
-    # =====================================================
+    result = calculator_execute(command)
+    if result is not None:
+        return result
 
     result = memory_execute(command)
-
     if result is not None:
         return result
-
-    # =====================================================
-    # SYSTEM MODULE
-    # =====================================================
 
     result = system_execute(command)
-
     if result is not None:
         return result
 
-    # =====================================================
-    # HELP
-    # =====================================================
+    result = app_execute(command)
+    if result is not None:
+        return result
 
     if command == "help":
 
@@ -80,6 +68,16 @@ what is <key>
 forget <key>
 memory
 
+APPLICATIONS
+------------
+open notepad
+open calculator
+open paint
+open cmd
+open explorer
+open vscode
+open chrome
+
 OTHER
 -----
 help
@@ -90,19 +88,11 @@ exit
 
         return True
 
-    # =====================================================
-    # EXIT
-    # =====================================================
-
     if command in ["exit", "quit", "bye"]:
 
         print("\nGoodbye!\n")
 
         return False
-
-    # =====================================================
-    # UNKNOWN
-    # =====================================================
 
     log(f"Unknown Command: {command}")
 
