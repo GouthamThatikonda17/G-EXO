@@ -1,6 +1,6 @@
 """
 Project G-EXO
-Command Module v0.1
+Command Module v0.2
 """
 
 import datetime
@@ -9,24 +9,54 @@ import datetime
 def execute(command):
     command = command.lower().strip()
 
-    if command == "hello":
+    # Greeting
+    if (
+        command == "hello"
+        or "hello" in command
+        or "hi" in command
+        or "hey" in command
+    ):
         print("\nHello, I am G-EXO.\n")
 
-    elif command == "version":
-        print("\nVersion 0.1\n")
+    # Version
+    elif (
+        command == "version"
+        or "version" in command
+    ):
+        print("\nVersion 0.2\n")
 
-    elif command == "developer":
+    # Developer
+    elif (
+        command == "developer"
+        or "who made you" in command
+        or "creator" in command
+        or "your developer" in command
+    ):
         print("\nDeveloper: Thatikonda Goutham Teja\n")
 
-    elif command == "time":
+    # Time
+    elif (
+        command == "time"
+        or "time" in command
+        or "clock" in command
+    ):
         now = datetime.datetime.now()
         print("\nCurrent Time:", now.strftime("%I:%M:%S %p"))
 
-    elif command == "date":
+    # Date
+    elif (
+        command == "date"
+        or "date" in command
+        or "today" in command
+    ):
         today = datetime.date.today()
         print("\nToday's Date:", today)
 
-    elif command == "help":
+    # Help
+    elif (
+        command == "help"
+        or "commands" in command
+    ):
         print("""
 Available Commands
 ------------------
@@ -39,9 +69,12 @@ help
 exit
 """)
 
-    elif command == "exit":
+    # Exit
+    elif command in ["exit", "quit", "bye", "goodbye"]:
+        print("\nGoodbye.")
         return False
 
+    # Unknown
     else:
         print("\nUnknown command.")
 
