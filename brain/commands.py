@@ -2,7 +2,7 @@
 =========================================================
 Project G-EXO
 Command Router
-Version : 1.0
+Version : 1.1
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
@@ -15,6 +15,7 @@ from modules.system_commands import execute as system_execute
 from modules.app_launcher import execute as app_execute
 from modules.web_commands import execute as web_execute
 from modules.file_manager import execute as file_execute
+from modules.notes_commands import execute as notes_execute
 
 
 # =====================================================
@@ -28,6 +29,7 @@ MODULES = [
     app_execute,
     web_execute,
     file_execute,
+    notes_execute,
 ]
 
 
@@ -38,7 +40,7 @@ def execute(command):
     log(f"User Command: {command}")
 
     # =====================================================
-    # PASS COMMAND TO MODULES
+    # SEND COMMAND TO MODULES
     # =====================================================
 
     for module in MODULES:
@@ -108,6 +110,13 @@ list files
 create folder <name>
 delete folder <name>
 change directory <folder>
+
+NOTES
+-----
+note <text>
+show notes
+delete note <number>
+clear notes
 
 OTHER
 -----
