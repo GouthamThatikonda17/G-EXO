@@ -2,7 +2,7 @@
 =========================================================
 Project G-EXO
 Command Router
-Version : 1.1
+Version : 1.2
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
@@ -16,11 +16,8 @@ from modules.app_launcher import execute as app_execute
 from modules.web_commands import execute as web_execute
 from modules.file_manager import execute as file_execute
 from modules.notes_commands import execute as notes_execute
+from modules.tasks_commands import execute as tasks_execute
 
-
-# =====================================================
-# MODULE REGISTRY
-# =====================================================
 
 MODULES = [
     calculator_execute,
@@ -30,6 +27,7 @@ MODULES = [
     web_execute,
     file_execute,
     notes_execute,
+    tasks_execute,
 ]
 
 
@@ -39,20 +37,12 @@ def execute(command):
 
     log(f"User Command: {command}")
 
-    # =====================================================
-    # SEND COMMAND TO MODULES
-    # =====================================================
-
     for module in MODULES:
 
         result = module(command)
 
         if result is not None:
             return result
-
-    # =====================================================
-    # HELP
-    # =====================================================
 
     if command == "help":
 
@@ -118,6 +108,14 @@ show notes
 delete note <number>
 clear notes
 
+TODOS
+-----
+todo <text>
+show todos
+complete todo <number>
+delete todo <number>
+clear todos
+
 OTHER
 -----
 help
@@ -128,19 +126,11 @@ exit
 
         return True
 
-    # =====================================================
-    # EXIT
-    # =====================================================
-
     if command in ["exit", "quit", "bye"]:
 
         print("\nGoodbye!\n")
 
         return False
-
-    # =====================================================
-    # UNKNOWN COMMAND
-    # =====================================================
 
     log(f"Unknown Command: {command}")
 
