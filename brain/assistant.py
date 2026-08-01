@@ -1,25 +1,45 @@
 """
+=========================================================
 Project G-EXO
-Assistant Module
+Assistant
+Version : 2.0
+Developer : Thatikonda Goutham Teja
+=========================================================
 """
 
 from commands import execute
-from logger import log
+from ai.router import AIRouter
 
 
 class GEXOBrain:
 
+    def __init__(self):
+
+        self.ai = AIRouter()
+
     def greet(self):
-        print("System Ready.")
-        print("Hello, I am G-EXO.")
-        log("G-EXO Started")
+
+        print("\n========================================")
+        print("         G-EXO AI Assistant")
+        print("========================================")
+        print("Type 'help' to see available commands.")
+        print("Type 'exit' to quit.\n")
 
     def process_command(self, command):
-        log(f"User Command: {command}")
 
-        running = execute(command)
+        result = execute(command)
 
-        if not running:
-            log("G-EXO Shutdown")
+        # Local command executed
+        if result is not None:
 
-        return running
+            return result
+
+        # Unknown command → Ask Gemini
+        print()
+
+        response = self.ai.chat(command)
+
+        print(response)
+        print()
+
+        return True
