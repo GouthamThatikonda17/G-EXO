@@ -2,12 +2,27 @@
 =========================================================
 Project G-EXO
 Calculator Module
-Version : 0.6
+Version : 2.1
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
 
 from logger import log
+
+
+def calculate(expression):
+
+    try:
+
+        result = eval(expression)
+
+        log(f"Calculated: {expression} = {result}")
+
+        return result
+
+    except Exception:
+
+        return None
 
 
 def execute(command):
@@ -19,18 +34,14 @@ def execute(command):
 
     expression = command.replace("calculate ", "", 1)
 
-    try:
+    result = calculate(expression)
 
-        result = eval(expression)
-
-        print(f"\nResult = {result}\n")
-
-        log(f"Calculated: {expression} = {result}")
-
-    except Exception:
+    if result is None:
 
         print("\nInvalid mathematical expression.\n")
 
-        log(f"Calculation Error: {expression}")
+    else:
+
+        print(f"\nResult = {result}\n")
 
     return True
