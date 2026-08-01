@@ -2,7 +2,7 @@
 =========================================================
 Project G-EXO
 Command Router
-Version : 0.8
+Version : 1.0
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
@@ -13,6 +13,22 @@ from modules.calculator import execute as calculator_execute
 from modules.memory_commands import execute as memory_execute
 from modules.system_commands import execute as system_execute
 from modules.app_launcher import execute as app_execute
+from modules.web_commands import execute as web_execute
+from modules.file_manager import execute as file_execute
+
+
+# =====================================================
+# MODULE REGISTRY
+# =====================================================
+
+MODULES = [
+    calculator_execute,
+    memory_execute,
+    system_execute,
+    app_execute,
+    web_execute,
+    file_execute,
+]
 
 
 def execute(command):
@@ -21,21 +37,20 @@ def execute(command):
 
     log(f"User Command: {command}")
 
-    result = calculator_execute(command)
-    if result is not None:
-        return result
+    # =====================================================
+    # PASS COMMAND TO MODULES
+    # =====================================================
 
-    result = memory_execute(command)
-    if result is not None:
-        return result
+    for module in MODULES:
 
-    result = system_execute(command)
-    if result is not None:
-        return result
+        result = module(command)
 
-    result = app_execute(command)
-    if result is not None:
-        return result
+        if result is not None:
+            return result
+
+    # =====================================================
+    # HELP
+    # =====================================================
 
     if command == "help":
 
@@ -73,10 +88,26 @@ APPLICATIONS
 open notepad
 open calculator
 open paint
-open cmd
 open explorer
 open vscode
 open chrome
+
+WEB
+---
+open youtube
+open github
+open gmail
+open chatgpt
+open google
+search <anything>
+
+FILE MANAGER
+------------
+pwd
+list files
+create folder <name>
+delete folder <name>
+change directory <folder>
 
 OTHER
 -----
@@ -88,11 +119,19 @@ exit
 
         return True
 
+    # =====================================================
+    # EXIT
+    # =====================================================
+
     if command in ["exit", "quit", "bye"]:
 
         print("\nGoodbye!\n")
 
         return False
+
+    # =====================================================
+    # UNKNOWN COMMAND
+    # =====================================================
 
     log(f"Unknown Command: {command}")
 
