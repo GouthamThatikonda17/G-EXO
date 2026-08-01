@@ -1,9 +1,14 @@
 """
+=========================================================
 Project G-EXO
-Command Module v0.4
+Command Module
+Version : 0.5
+Developer : Thatikonda Goutham Teja
+=========================================================
 """
 
 import datetime
+
 from memory import remember, recall, forget, show_memory
 from logger import log
 
@@ -14,9 +19,35 @@ def execute(command):
 
     log(f"User Command: {command}")
 
-    # ---------------- MEMORY ----------------
+    # =====================================================
+    # CALCULATOR
+    # =====================================================
 
-    if command.startswith("remember "):
+    if command.startswith("calculate "):
+
+        expression = command.replace("calculate ", "", 1)
+
+        try:
+
+            result = eval(expression)
+
+            print(f"\nResult = {result}\n")
+
+            log(f"Calculated: {expression} = {result}")
+
+        except Exception:
+
+            print("\nInvalid mathematical expression.\n")
+
+            log(f"Calculation Error: {expression}")
+
+        return True
+
+    # =====================================================
+    # MEMORY
+    # =====================================================
+
+    elif command.startswith("remember "):
 
         text = command.replace("remember ", "", 1)
 
@@ -89,19 +120,33 @@ def execute(command):
 
         return True
 
-    # ---------------- NORMAL COMMANDS ----------------
+    # =====================================================
+    # GREETING
+    # =====================================================
 
-    if command in ["hello", "hi", "hey"]:
+    elif command in ["hello", "hi", "hey"]:
 
         print("\nHello, I am G-EXO.\n")
 
+    # =====================================================
+    # VERSION
+    # =====================================================
+
     elif command == "version":
 
-        print("\nVersion 0.4\n")
+        print("\nG-EXO Version 0.5\n")
+
+    # =====================================================
+    # DEVELOPER
+    # =====================================================
 
     elif command in ["developer", "creator", "who made you"]:
 
         print("\nDeveloper: Thatikonda Goutham Teja\n")
+
+    # =====================================================
+    # TIME
+    # =====================================================
 
     elif command == "time":
 
@@ -109,22 +154,32 @@ def execute(command):
 
         print("\nCurrent Time:", now.strftime("%I:%M:%S %p"))
 
+    # =====================================================
+    # DATE
+    # =====================================================
+
     elif command == "date":
 
         today = datetime.date.today()
 
         print("\nToday's Date:", today)
 
+    # =====================================================
+    # HELP
+    # =====================================================
+
     elif command == "help":
 
         print("""
-Available Commands
-------------------
+==================== COMMANDS ====================
+
 hello
 version
 developer
 time
 date
+
+calculate <expression>
 
 remember <key> is <value>
 what is <key>
@@ -133,18 +188,28 @@ memory
 
 help
 exit
+
+==================================================
 """)
+
+    # =====================================================
+    # EXIT
+    # =====================================================
 
     elif command in ["exit", "quit", "bye"]:
 
-        print("\nGoodbye.")
+        print("\nGoodbye!\n")
 
         return False
+
+    # =====================================================
+    # UNKNOWN
+    # =====================================================
 
     else:
 
         log(f"Unknown Command: {command}")
 
-        print("\nUnknown command.")
+        print("\nUnknown command.\n")
 
     return True
