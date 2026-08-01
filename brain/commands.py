@@ -1,15 +1,18 @@
 """
 Project G-EXO
-Command Module v0.3
+Command Module v0.4
 """
 
 import datetime
 from memory import remember, recall, forget, show_memory
+from logger import log
 
 
 def execute(command):
 
     command = command.lower().strip()
+
+    log(f"User Command: {command}")
 
     # ---------------- MEMORY ----------------
 
@@ -22,6 +25,8 @@ def execute(command):
             key, value = text.split(" is ", 1)
 
             remember(key.strip(), value.strip())
+
+            log(f"Memory Saved: {key.strip()} = {value.strip()}")
 
             print(f"\nOkay! I'll remember that {key.strip()} is {value.strip()}.\n")
 
@@ -38,8 +43,11 @@ def execute(command):
         value = recall(key.strip())
 
         if value:
+
             print(f"\n{key.title()} = {value}\n")
+
         else:
+
             print("\nI don't know that yet.\n")
 
         return True
@@ -49,8 +57,13 @@ def execute(command):
         key = command.replace("forget ", "", 1)
 
         if forget(key.strip()):
+
+            log(f"Memory Deleted: {key.strip()}")
+
             print("\nMemory deleted.\n")
+
         else:
+
             print("\nI don't remember that.\n")
 
         return True
@@ -60,11 +73,18 @@ def execute(command):
         memory = show_memory()
 
         if not memory:
+
             print("\nMemory is empty.\n")
+
         else:
-            print("\nStored Memories\n---------------")
+
+            print("\nStored Memories")
+            print("----------------")
+
             for key, value in memory.items():
+
                 print(f"{key} : {value}")
+
             print()
 
         return True
@@ -72,20 +92,27 @@ def execute(command):
     # ---------------- NORMAL COMMANDS ----------------
 
     if command in ["hello", "hi", "hey"]:
+
         print("\nHello, I am G-EXO.\n")
 
     elif command == "version":
-        print("\nVersion 0.3\n")
+
+        print("\nVersion 0.4\n")
 
     elif command in ["developer", "creator", "who made you"]:
+
         print("\nDeveloper: Thatikonda Goutham Teja\n")
 
     elif command == "time":
+
         now = datetime.datetime.now()
+
         print("\nCurrent Time:", now.strftime("%I:%M:%S %p"))
 
     elif command == "date":
+
         today = datetime.date.today()
+
         print("\nToday's Date:", today)
 
     elif command == "help":
@@ -111,9 +138,12 @@ exit
     elif command in ["exit", "quit", "bye"]:
 
         print("\nGoodbye.")
+
         return False
 
     else:
+
+        log(f"Unknown Command: {command}")
 
         print("\nUnknown command.")
 
