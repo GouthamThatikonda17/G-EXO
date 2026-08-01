@@ -2,15 +2,19 @@
 =========================================================
 Project G-EXO
 AI Tool Registry
-Version : 2.1
+Version : 3.0
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
 
-from modules.calculator import calculate
-from tasks import add_task
-from notes import add_note
-from memory import remember
+from memory import remember, recall, forget
+from notes import add_note, get_notes, delete_note
+from tasks import (
+    add_task,
+    get_tasks,
+    complete_task,
+    delete_task,
+)
 
 
 class ToolRegistry:
@@ -18,24 +22,57 @@ class ToolRegistry:
     def __init__(self):
 
         self.tools = {
-            "calculate": calculate,
-            "add_task": add_task,
-            "add_note": add_note,
-            "remember": remember,
+
+            "memory": {
+                "remember": remember,
+                "recall": recall,
+                "forget": forget,
+            },
+
+            "notes": {
+                "add": add_note,
+                "show": get_notes,
+                "delete": delete_note,
+            },
+
+            "tasks": {
+                "add": add_task,
+                "show": get_tasks,
+                "complete": complete_task,
+                "delete": delete_task,
+            },
+
         }
 
-    def has_tool(self, name):
+    def has_category(self, category):
 
-        return name in self.tools
+        return category in self.tools
 
-    def execute(self, name, *args):
+    def has_tool(self, category, action):
 
-        if not self.has_tool(name):
+        return (
+            self.has_category(category)
+            and action in self.tools[category]
+        )
 
-            raise ValueError(f"Unknown tool: {name}")
+    def execute(self, category, action, *args):
 
-        return self.tools[name](*args)
+        if not self.has_tool(category, action):
 
-    def list_tools(self):
+            raise ValueError(
+                f"Unknown tool: {category}.{action}"
+            )
+
+        return self.tools[category][action](*args)
+
+    def list_categories(self):
 
         return list(self.tools.keys())
+
+    def list_tools(self, category):
+
+        if not self.has_category(category):
+
+            return []
+
+        return list(self.tools[category].keys())

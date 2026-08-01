@@ -8,7 +8,7 @@ Developer : Thatikonda Goutham Teja
 """
 
 import os
-
+from ai.prompts import SYSTEM_PROMPT
 from dotenv import load_dotenv
 from google import genai
 
@@ -37,7 +37,7 @@ class GeminiProvider(AIProvider):
 
             response = self.client.models.generate_content(
                 model="gemini-3.6-flash",
-                contents=prompt,
+                contents=f"{SYSTEM_PROMPT}\n\nUser: {prompt}",
             )
 
             return response.text
