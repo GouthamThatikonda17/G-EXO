@@ -2,7 +2,7 @@
 =========================================================
 Project G-EXO
 Notes Storage Module
-Version : 1.1
+Version : 1.1.1
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
@@ -10,11 +10,12 @@ Developer : Thatikonda Goutham Teja
 import json
 import os
 
+from config import NOTES_FILE
 
-NOTES_FILE = "brain/notes.json"
 
+def _ensure_notes_file():
 
-def load_notes():
+    os.makedirs(os.path.dirname(NOTES_FILE), exist_ok=True)
 
     if not os.path.exists(NOTES_FILE):
 
@@ -22,12 +23,19 @@ def load_notes():
 
             json.dump([], file, indent=4)
 
+
+def load_notes():
+
+    _ensure_notes_file()
+
     with open(NOTES_FILE, "r") as file:
 
         return json.load(file)
 
 
 def save_notes(notes):
+
+    _ensure_notes_file()
 
     with open(NOTES_FILE, "w") as file:
 

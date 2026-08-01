@@ -1,15 +1,19 @@
 """
+=========================================================
 Project G-EXO
-Logger Module v0.1
+Logger Module
+Version : 1.1.1
+Developer : Thatikonda Goutham Teja
+=========================================================
 """
 
 import logging
 import os
 
-LOG_DIR = "logs"
-LOG_FILE = os.path.join(LOG_DIR, "gexo.log")
+from config import LOG_FILE
 
-os.makedirs(LOG_DIR, exist_ok=True)
+
+os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
 logging.basicConfig(
     filename=LOG_FILE,
@@ -17,5 +21,7 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(message)s",
 )
 
+
 def log(message):
+
     logging.info(message)

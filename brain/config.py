@@ -1,8 +1,38 @@
-APP_NAME = "G-EXO"
-VERSION = "0.1"
+"""
+=========================================================
+Project G-EXO
+Configuration
+Version : 1.1.1
+Developer : Thatikonda Goutham Teja
+=========================================================
+"""
 
-AUTHOR = "Thatikonda Goutham Teja"
+import os
 
-WAKE_WORD = "hey g-exo"
+# =====================================================
+# PROJECT ROOT
+# =====================================================
 
-DEBUG = True
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# =====================================================
+# DATA DIRECTORY
+# =====================================================
+
+DATA_DIR = os.path.join(BASE_DIR, "data")
+
+# =====================================================
+# LOG DIRECTORY
+# =====================================================
+
+LOG_DIR = os.path.join(BASE_DIR, "logs")
+
+# =====================================================
+# FILES
+# =====================================================
+
+MEMORY_FILE = os.path.join(DATA_DIR, "memory.json")
+
+NOTES_FILE = os.path.join(DATA_DIR, "notes.json")
+
+LOG_FILE = os.path.join(LOG_DIR, "gexo.log")
