@@ -2,40 +2,25 @@
 =========================================================
 Project G-EXO Desktop
 Main Window
-Version : 2.0
+Version : 3.0
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
 
-import os
-import sys
-
 from PySide6.QtWidgets import (
     QWidget,
     QMainWindow,
-    QTextEdit,
-    QLineEdit,
-    QPushButton,
     QVBoxLayout,
     QHBoxLayout,
 )
 
-# =====================================================
-# IMPORT G-EXO CORE
-# =====================================================
+from core.dispatcher import Dispatcher
+from core.request import Request
 
-ROOT_DIR = os.path.abspath(
-    os.path.join(
-        os.path.dirname(__file__),
-        ".."
-    )
-)
-
-if ROOT_DIR not in sys.path:
-    sys.path.append(ROOT_DIR)
-
-from brain.core.dispatcher import Dispatcher
-from brain.core.request import Request
+from widgets.top_bar import TopBar
+from widgets.sidebar import Sidebar
+from widgets.chat_area import ChatArea
+from widgets.message_input import MessageInput
 
 
 class MainWindow(QMainWindow):
@@ -48,13 +33,19 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("G-EXO")
 
-        self.resize(1000, 700)
+        self.resize(1200, 750)
 
         self.setup_ui()
 
         self.setup_connections()
 
-    # =====================================================
+        self.chat_area.add_message(
+
+            "G-EXO",
+
+            "Welcome to G-EXO. How can I help you today?"
+
+        )
 
     def setup_ui(self):
 
@@ -62,71 +53,92 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(central_widget)
 
-        main_layout = QVBoxLayout()
+        root_layout = QHBoxLayout()
 
-        central_widget.setLayout(main_layout)
+        root_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.chat_area = QTextEdit()
+        root_layout.setSpacing(0)
 
-        self.chat_area.setReadOnly(True)
+        central_widget.setLayout(root_layout)
 
-        self.chat_area.setPlaceholderText(
-            "Welcome to G-EXO..."
-        )
+        self.sidebar = Sidebar()
 
-        bottom_layout = QHBoxLayout()
+        root_layout.addWidget(self.sidebar)
 
-        self.message_input = QLineEdit()
+        right_widget = QWidget()
 
-        self.message_input.setPlaceholderText(
-            "Type your message..."
-        )
+        right_layout = QVBoxLayout()
 
-        self.send_button = QPushButton("Send")
+        right_layout.setContentsMargins(0, 0, 0, 0)
 
-        bottom_layout.addWidget(self.message_input)
+        right_layout.setSpacing(0)
 
-        bottom_layout.addWidget(self.send_button)
+        right_widget.setLayout(right_layout)
 
-        main_layout.addWidget(self.chat_area)
+        root_layout.addWidget(right_widget)
 
-        main_layout.addLayout(bottom_layout)
+        self.top_bar = TopBar()
 
-    # =====================================================
+        right_layout.addWidget(self.top_bar)
+
+        self.chat_area = ChatArea()
+
+        right_layout.addWidget(self.chat_area)
+
+        self.message_input = MessageInput()
+
+        right_layout.addWidget(self.message_input)
 
     def setup_connections(self):
 
-        self.send_button.clicked.connect(
+        self.message_input.send_button.clicked.connect(
+
             self.send_message
+
         )
 
-        self.message_input.returnPressed.connect(
-            self.send_message
-        )
+        self.message_input.input.returnPressed.connect(
 
-    # =====================================================
+            self.send_message
+
+        )
 
     def send_message(self):
 
-        message = self.message_input.text().strip()
+        message = self.message_input.input.text().strip()
 
         if not message:
 
             return
 
-        self.chat_area.append(f"You: {message}")
+        self.chat_area.add_message(
+
+            "You",
+
+            message,
+
+        )
 
         request = Request(
+
             message=message,
+
             source="desktop",
+
         )
 
-        response = self.dispatcher.dispatch(request)
+        response = self.dispatcher.dispatch(
 
-        self.chat_area.append(
-            f"G-EXO: {response.message}"
+            request
+
         )
 
-        self.chat_area.append("")
+        self.chat_area.add_message(
 
-        self.message_input.clear()
+            "G-EXO",
+
+            response.message,
+
+        )
+
+        self.message_input.input.clear()

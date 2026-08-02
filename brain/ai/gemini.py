@@ -18,7 +18,7 @@ from ai.provider import AIProvider
 load_dotenv()
 
 API_KEY = os.getenv("GEMINI_API_KEY")
-
+print("Loaded API Key:", API_KEY[:12] if API_KEY else "None")
 
 class GeminiProvider(AIProvider):
 
