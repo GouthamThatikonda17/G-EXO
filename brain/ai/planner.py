@@ -2,52 +2,35 @@
 =========================================================
 Project G-EXO
 AI Planner
-Version : 3.0
+Version : 4.0
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
+
+import json
+
+from ai.gemini import GeminiProvider
 
 
 class AIPlanner:
 
     def __init__(self):
 
-        pass
+        self.ai = GeminiProvider()
 
-    def plan(self, message: str):
+    def plan(self, message: str) -> dict:
 
-        message = message.lower().strip()
+        try:
 
-        if message.startswith("remember"):
+            response = self.ai.plan(message)
 
-            return {
-                "intent": "memory",
-                "tool": "memory",
-                "action": "remember",
-                "arguments": {},
-            }
+            return json.loads(response)
 
-        if message.startswith("note"):
+        except Exception:
 
             return {
-                "intent": "notes",
-                "tool": "notes",
-                "action": "add",
+                "intent": "chat",
+                "tool": None,
+                "action": None,
                 "arguments": {},
             }
-
-        if message.startswith("todo"):
-
-            return {
-                "intent": "tasks",
-                "tool": "tasks",
-                "action": "add",
-                "arguments": {},
-            }
-
-        return {
-            "intent": "chat",
-            "tool": None,
-            "action": None,
-            "arguments": {},
-        }

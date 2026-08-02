@@ -2,20 +2,20 @@
 =========================================================
 Project G-EXO
 Assistant
-Version : 2.0
+Version : 3.0
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
 
-from commands import execute
-from ai.router import AIRouter
+from core.dispatcher import Dispatcher
+from core.request import Request
 
 
 class GEXOBrain:
 
     def __init__(self):
 
-        self.ai = AIRouter()
+        self.dispatcher = Dispatcher()
 
     def greet(self):
 
@@ -27,19 +27,21 @@ class GEXOBrain:
 
     def process_command(self, command):
 
-        result = execute(command)
+        request = Request(
+            message=command,
+            source="desktop",
+        )
 
-        # Local command executed
-        if result is not None:
+        response = self.dispatcher.dispatch(request)
 
-            return result
+        if response.message == "exit":
 
-        # Unknown command → Ask Gemini
+            return False
+
         print()
 
-        response = self.ai.chat(command)
+        print(response.message)
 
-        print(response)
         print()
 
         return True
