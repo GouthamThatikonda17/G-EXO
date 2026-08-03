@@ -2,25 +2,21 @@
 =========================================================
 Project G-EXO Desktop
 Main Window
-Version : 3.0
+Version : 9.0
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
 
-from PySide6.QtWidgets import (
-    QWidget,
-    QMainWindow,
-    QVBoxLayout,
-    QHBoxLayout,
-)
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QKeyEvent
+from PySide6.QtWidgets import QMainWindow
 
-from core.dispatcher import Dispatcher
-from core.request import Request
+from assistant import GEXOBrain
 
-from widgets.top_bar import TopBar
-from widgets.sidebar import Sidebar
-from widgets.chat_area import ChatArea
-from widgets.message_input import MessageInput
+from scene.gexo_scene import GEXOScene
+
+from behavior.behavior_engine import BehaviorEngine
+from behavior.face_state import FaceState
 
 
 class MainWindow(QMainWindow):
@@ -29,116 +25,96 @@ class MainWindow(QMainWindow):
 
         super().__init__()
 
-        self.dispatcher = Dispatcher()
+        self.brain = GEXOBrain()
+
+        self.behavior = BehaviorEngine()
 
         self.setWindowTitle("G-EXO")
 
         self.resize(1200, 750)
 
-        self.setup_ui()
+        self.scene = GEXOScene()
 
-        self.setup_connections()
+        self.setCentralWidget(
 
-        self.chat_area.add_message(
-
-            "G-EXO",
-
-            "Welcome to G-EXO. How can I help you today?"
+            self.scene
 
         )
 
-    def setup_ui(self):
+        # ==========================================
+        # Behavior -> Scene
+        # ==========================================
 
-        central_widget = QWidget()
+        self.behavior.add_listener(
 
-        self.setCentralWidget(central_widget)
-
-        root_layout = QHBoxLayout()
-
-        root_layout.setContentsMargins(0, 0, 0, 0)
-
-        root_layout.setSpacing(0)
-
-        central_widget.setLayout(root_layout)
-
-        self.sidebar = Sidebar()
-
-        root_layout.addWidget(self.sidebar)
-
-        right_widget = QWidget()
-
-        right_layout = QVBoxLayout()
-
-        right_layout.setContentsMargins(0, 0, 0, 0)
-
-        right_layout.setSpacing(0)
-
-        right_widget.setLayout(right_layout)
-
-        root_layout.addWidget(right_widget)
-
-        self.top_bar = TopBar()
-
-        right_layout.addWidget(self.top_bar)
-
-        self.chat_area = ChatArea()
-
-        right_layout.addWidget(self.chat_area)
-
-        self.message_input = MessageInput()
-
-        right_layout.addWidget(self.message_input)
-
-    def setup_connections(self):
-
-        self.message_input.send_button.clicked.connect(
-
-            self.send_message
+            self.scene.set_state
 
         )
 
-        self.message_input.input.returnPressed.connect(
+        self.behavior.set_state(
 
-            self.send_message
-
-        )
-
-    def send_message(self):
-
-        message = self.message_input.input.text().strip()
-
-        if not message:
-
-            return
-
-        self.chat_area.add_message(
-
-            "You",
-
-            message,
+            FaceState.IDLE
 
         )
 
-        request = Request(
+    # =====================================================
+    # Keyboard (Temporary)
+    # =====================================================
 
-            message=message,
+    def keyPressEvent(
 
-            source="desktop",
+        self,
 
-        )
+        event: QKeyEvent,
 
-        response = self.dispatcher.dispatch(
+    ):
 
-            request
+        key = event.key()
 
-        )
+        if key == Qt.Key_1:
 
-        self.chat_area.add_message(
+            self.behavior.set_state(
 
-            "G-EXO",
+                FaceState.IDLE
 
-            response.message,
+            )
 
-        )
+        elif key == Qt.Key_2:
 
-        self.message_input.input.clear()
+            self.behavior.set_state(
+
+                FaceState.LISTENING
+
+            )
+
+        elif key == Qt.Key_3:
+
+            self.behavior.set_state(
+
+                FaceState.THINKING
+
+            )
+
+        elif key == Qt.Key_4:
+
+            self.behavior.set_state(
+
+                FaceState.SPEAKING
+
+            )
+
+        elif key == Qt.Key_5:
+
+            self.behavior.set_state(
+
+                FaceState.ERROR
+
+            )
+
+        else:
+
+            super().keyPressEvent(
+
+                event
+
+            )

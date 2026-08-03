@@ -1,15 +1,21 @@
 """
 =========================================================
 Project G-EXO
-AI Tool Registry
-Version : 3.0
+AI Capability Registry
+Version : 4.0
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
 
-from memory import remember, recall, forget
-from notes import add_note, get_notes, delete_note
-from tasks import (
+from legacy_memory import remember, recall, forget
+
+from legacy_notes import (
+    add_note,
+    get_notes,
+    delete_note,
+)
+
+from legacy_tasks import (
     add_task,
     get_tasks,
     complete_task,
@@ -24,22 +30,35 @@ class ToolRegistry:
         self.tools = {
 
             "memory": {
+
                 "remember": remember,
+
                 "recall": recall,
+
                 "forget": forget,
+
             },
 
             "notes": {
+
                 "add": add_note,
+
                 "show": get_notes,
+
                 "delete": delete_note,
+
             },
 
             "tasks": {
+
                 "add": add_task,
+
                 "show": get_tasks,
+
                 "complete": complete_task,
+
                 "delete": delete_task,
+
             },
 
         }
@@ -51,8 +70,11 @@ class ToolRegistry:
     def has_tool(self, category, action):
 
         return (
+
             self.has_category(category)
+
             and action in self.tools[category]
+
         )
 
     def execute(self, category, action, *args):
@@ -60,7 +82,9 @@ class ToolRegistry:
         if not self.has_tool(category, action):
 
             raise ValueError(
+
                 f"Unknown tool: {category}.{action}"
+
             )
 
         return self.tools[category][action](*args)

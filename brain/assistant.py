@@ -1,47 +1,51 @@
 """
 =========================================================
 Project G-EXO
-Assistant
-Version : 3.0
+Brain
+Version : 4.0
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
 
 from core.dispatcher import Dispatcher
 from core.request import Request
+from core.response import Response
 
 
 class GEXOBrain:
+    """
+    Main entry point of G-EXO Brain.
+
+    Every interface communicates with this class.
+
+    Examples:
+        - Desktop
+        - Mobile
+        - Robot
+        - Voice
+        - API
+    """
 
     def __init__(self):
 
         self.dispatcher = Dispatcher()
 
-    def greet(self):
+    # =====================================================
+    # PROCESS
+    # =====================================================
 
-        print("\n========================================")
-        print("         G-EXO AI Assistant")
-        print("========================================")
-        print("Type 'help' to see available commands.")
-        print("Type 'exit' to quit.\n")
-
-    def process_command(self, command):
+    def process(
+        self,
+        message: str,
+        source: str = "desktop",
+    ) -> Response:
 
         request = Request(
-            message=command,
-            source="desktop",
+
+            message=message,
+
+            source=source,
+
         )
 
-        response = self.dispatcher.dispatch(request)
-
-        if response.message == "exit":
-
-            return False
-
-        print()
-
-        print(response.message)
-
-        print()
-
-        return True
+        return self.dispatcher.dispatch(request)
