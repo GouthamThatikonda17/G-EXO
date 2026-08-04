@@ -125,3 +125,17 @@ Verified:
 ✓ WhisperEngine
 ✓ Runtime Tested
 ✓ End-to-End Speech Pipeline Operational
+
+Sprint 2: Core Request Pipeline Integration
+
+Status: Completed
+
+Verified:
+✓ Dispatcher → IntentRouter
+✓ Planner Integration
+✓ AI Chat Responses
+✓ Memory Tool Execution
+✓ Notes Tool Execution
+✓ Calculator Routing
+✓ Local Command Routing
+✓ End-to-End Runtime Tested
