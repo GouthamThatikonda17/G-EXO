@@ -383,4 +383,17 @@ Do not modify documentation.
 
 Report the conflict.
 
-Wait for the developer's decision.
+Wait for the developer's decision.# Source of Truth Priority
+
+When making engineering decisions, always use the following priority:
+
+1. Uploaded source code (highest priority)
+2. PROJECT_CONTEXT.md
+3. ARCHITECTURE.md
+4. IMPLEMENTATION_STATUS.md
+5. ENGINEERING_STANDARD.md
+6. AI_CONTEXT.md
+
+Never assume the documentation is newer than the uploaded source code.
+
+If documentation and code disagree, report the inconsistency before implementing.

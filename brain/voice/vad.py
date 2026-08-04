@@ -38,6 +38,10 @@ class VoiceActivityDetector:
         if frame is None or frame.size == 0:
             return False
         energy = float(np.sqrt(np.mean(np.square(frame))))
+        
+        # Temporary debugging instrumentation to measure runtime RMS energy
+        
+        
         return energy >= self.threshold
 
     def update(self, frame: np.ndarray) -> bool:

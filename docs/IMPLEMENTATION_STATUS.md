@@ -114,19 +114,14 @@ The current execution paths and their connection statuses:
 
 ## 14. Sprint History
 
-### Sprint 1 – Whisper Subsystem
+Sprint 1: Speech Runtime
 
-Status: Under Review
+Status: Completed
 
-Scope:
-- brain/voice/whisper_engine.py
-- brain/voice/speech_to_text.py
-
-Result:
-Implementation proposed and awaiting architectural review and integration approval.
-
-Commit:
-Pending
-
-Approved:
-No
+Verified:
+✓ Recorder
+✓ Voice Activity Detector
+✓ SpeechToText
+✓ WhisperEngine
+✓ Runtime Tested
+✓ End-to-End Speech Pipeline Operational
