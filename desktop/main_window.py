@@ -1,7 +1,7 @@
 """ =========================================================
 Project G-EXO
 Desktop Main Window
-Version : 9.5
+Version : 9.3
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
     # =====================================================
     # AI Processing
     # =====================================================
-    def process_message(self, message: str):
+    def process_message(self, text: str):
         if self._is_processing:
             print("[Desktop] Request rejected: Another interaction is already running.")
             return
@@ -58,7 +58,7 @@ class MainWindow(QMainWindow):
         self._worker_thread = QThread()
         self._worker = ChatWorker(
             self.brain.process,
-            message,
+            text,
             source="desktop"
         )
         self._worker.moveToThread(self._worker_thread)
@@ -71,18 +71,22 @@ class MainWindow(QMainWindow):
         # Qt Recommended Thread Lifecycle Cleanup
         self._worker.finished.connect(self._worker_thread.quit)
         self._worker.failed.connect(self._worker_thread.quit)
+        
         self._worker.finished.connect(self._worker.deleteLater)
         self._worker.failed.connect(self._worker.deleteLater)
+        
         self._worker_thread.finished.connect(self._worker_thread.deleteLater)
         
-        # Safely clear references only when the thread has fully finished
-        self._worker_thread.finished.connect(self._clear_thread_references)
+        # Centralized State Cleanup
+        self._worker_thread.finished.connect(self._cleanup_worker)
         
         self._worker_thread.start()
 
-    def _clear_thread_references(self):
+    def _cleanup_worker(self):
+        """Executed only after the QThread has completely finished."""
         self._worker_thread = None
         self._worker = None
+        self._is_processing = False
 
     def _on_process_finished(self, response):
         self.behavior.set_state(FaceState.SPEAKING)
@@ -93,14 +97,12 @@ class MainWindow(QMainWindow):
             print("[Desktop] G-EXO: Received invalid response.")
             
         self.behavior.set_state(FaceState.IDLE)
-        self._is_processing = False
 
     def _on_process_failed(self, error: str):
         self.behavior.set_state(FaceState.ERROR)
         print(f"[Desktop Error] {error}")
         
         self.behavior.set_state(FaceState.IDLE)
-        self._is_processing = False
 
     # =====================================================
     # Keyboard (Temporary)
@@ -130,6 +132,8 @@ class MainWindow(QMainWindow):
             self.behavior.set_state(
                 FaceState.ERROR
             )
+        elif key == Qt.Key_6:
+            self.process_message("Desktop thread test")
         else:
             super().keyPressEvent(
                 event
@@ -139,7 +143,6 @@ class MainWindow(QMainWindow):
     # Shutdown
     # =====================================================
     def closeEvent(self, event: QCloseEvent):
-        # Blocking wait is required here to prevent application crash during shutdown
         if self._worker_thread is not None and self._worker_thread.isRunning():
             self._worker_thread.quit()
             self._worker_thread.wait()
