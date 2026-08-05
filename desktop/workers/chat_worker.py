@@ -29,6 +29,7 @@ class ChatWorker(QObject):
                 *self.args,
                 **self.kwargs,
             )
+            
             self.finished.emit(
                 result
             )

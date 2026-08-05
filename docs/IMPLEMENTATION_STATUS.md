@@ -32,7 +32,7 @@ Sprints are strictly scoped. Code modifications must remain absolutely confined 
 *   **Production Ready**: The subsystem is fully tested, optimized, handles edge cases safely, and is ready for deployment.
 
 ## 7. Repository Health
-Overall, the repository maintains a clear, decoupled architecture separating the PyQt6 frontend (`desktop/`) from the FastAPI/Core backend (`brain/`). The backend execution loops are runtime-verified, and the speech pipeline operates safely on dedicated worker threads without blocking PortAudio callbacks. Minor legacy redundancies require audit and deprecation.
+Overall, the repository maintains a clear, decoupled architecture separating the PyQt6 frontend (`desktop/`) from the backend (`brain/`). The Core Request Pipeline, Voice Runtime, and Desktop asynchronous execution pipeline are now runtime-verified. Desktop requests execute safely on dedicated worker threads without blocking the PyQt event loop, and worker lifecycle management has been validated through graceful shutdown testing. Remaining work focuses on full desktop UI integration, backend/frontend synchronization, and production hardening.
 
 ## 8. Current Entry Point
 Project G-EXO operates with a decoupled architecture, resulting in dual entry points:
@@ -60,17 +60,16 @@ The current execution paths and their connection statuses:
 *   **Status**: Fully operational and runtime verified. The listener lifecycle is robust, avoiding PortAudio deadlocks, and the end-to-end system runs smoothly via the orchestrating worker thread.
 
 ## 10. Current State of Subsystems
-
 | Subsystem | Implemented | Integrated | Production Ready | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| **Desktop UI & Visuals** | Yes | Partial | No | UI scaffolding and vector face engine exist. Needs binding to backend state. |
-| **API & Schemas** | Yes | Partial | No | FastAPI routes and Pydantic schemas are well-defined. |
-| **AI & Planner** | Yes | Yes | No | Gemini integration and tool registry exist. Execution loop is wired and runtime verified. |
-| **Memory System** | Partial | No | No | Tiered architecture exists. Requires background consolidation logic. |
-| **Voice Runtime** | Yes | Yes | No | Fully operational. Uses background thread, thread-safe locking, and stable listener lifecycles. |
-| **Decision Engine** | No | No | No | Rules and context evaluation require significant expansion. |
-| **Emotion & Personality** | No | No | No | Modules are currently empty stubs. |
-| **Testing Suite** | Partial | No | No | Test files exist as structural stubs only. |
+| **Desktop UI & Visuals** | Yes | Partial | No | Vector face engine exists. Asynchronous Brain execution is integrated. Chat widgets remain disconnected pending Sprint 3.3. |
+| **API & Schemas** | Yes | Partial | No | FastAPI routes and schemas are implemented. Desktop currently follows the direct `GEXOBrain` architecture. |
+| **AI & Planner** | Yes | Yes | No | Dispatcher, planner, Gemini provider, and tool execution are fully integrated and runtime verified. |
+| **Memory System** | Partial | Partial | No | Memory execution is integrated. Background consolidation lifecycle remains incomplete. |
+| **Voice Runtime** | Yes | Yes | No | Fully operational. Thread-safe worker architecture verified. |
+| **Decision Engine** | No | No | No | Rules and context evaluation require expansion. |
+| **Emotion & Personality** | No | No | No | Modules remain structural stubs. |
+| **Testing Suite** | Partial | Partial | No | Runtime validation completed for core execution paths. Automated test coverage remains limited. |
 
 ## 11. Technical Debt to Resolve
 * **[PRIORITY]** Audit, deprecate, then remove if unused the `brain/legacy_*.py` files to enforce the use of `brain/memory/` and `brain/tools/`.
@@ -97,10 +96,28 @@ The current execution paths and their connection statuses:
 *   **Tasks**:
     *   Extend `brain/memory/memory_manager.py` to handle Working -> Short -> Long term consolidation.
 
-### Phase 3: Runtimes & UI Synchronization (Current)
-*   **Goal**: Ensure the backend and frontend runtimes communicate safely without blocking threads.
-*   **Tasks**:
-    *   Extend `desktop/workers/chat_worker.py` to handle bidirectional streaming from the FastAPI layer.
+### Phase 3: Runtimes & UI Synchronization (In Progress)
+
+**Goal**
+
+Ensure the backend and frontend runtimes communicate safely without blocking execution while progressively integrating the desktop interface.
+
+**Completed**
+
+- Sprint 3.1 — Voice Runtime thread safety completed.
+- Sprint 3.2 — Desktop asynchronous Brain execution completed.
+- ChatWorker integrated with `MainWindow`.
+- Dedicated `QThread` execution verified.
+- Worker lifecycle cleanup implemented.
+- Graceful shutdown verified.
+- Concurrent request protection implemented.
+
+**Remaining**
+
+- Sprint 3.3 — Integrate existing desktop widgets (`ChatArea`, `MessageInput`, `Sidebar`, `TopBar`).
+- Synchronize desktop message lifecycle with `BehaviorEngine`.
+- Connect desktop widgets to `ChatWorker`.
+- Complete frontend/backend runtime synchronization.
 
 ### Phase 4: Emotion, Behavior, and State Generation
 *   **Goal**: Bring the robot to life by connecting backend decisions to frontend visuals.
@@ -152,6 +169,63 @@ Scope
 Result
 
 Dispatcher, planner, tool execution, memory execution, and Gemini processing were fully integrated into the request pipeline. Runtime verification confirms successful end-to-end request processing across local tools and AI responses.
+
+Commit
+
+Completed
+
+Approved
+
+Yes
+
+
+### Sprint 3.1 – Voice Runtime Thread Safety
+
+Status: Completed
+
+Scope
+
+- brain/runtime/voice_runtime.py
+
+Result
+
+Introduced a dedicated interaction worker thread for the Voice Runtime, eliminating PortAudio callback blocking and microphone contention. Implemented thread-safe interaction locking, safe listener lifecycle management, and verified end-to-end voice execution.
+
+Commit
+
+Completed
+
+Approved
+
+Yes
+
+---
+
+### Sprint 3.2 – Desktop Asynchronous Brain Execution
+
+Status: Completed
+
+Scope
+
+- desktop/main_window.py
+
+Result
+
+Integrated asynchronous desktop execution using `ChatWorker` and `QThread` while preserving the direct `GEXOBrain` architecture. Implemented concurrency protection, centralized worker lifecycle cleanup, behavior state synchronization, temporary development trigger, and graceful shutdown handling. Runtime testing verified responsive UI, correct worker lifecycle management, and clean application shutdown.
+
+Verified
+
+✓ Desktop remains responsive during AI execution
+
+✓ `ChatWorker` executes `GEXOBrain.process()`
+
+✓ Concurrent requests are rejected safely
+
+✓ Worker lifecycle cleanup centralized
+
+✓ Graceful shutdown verified
+
+✓ Behavior synchronization (Idle → Thinking → Speaking → Idle)
 
 Commit
 
