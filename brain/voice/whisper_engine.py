@@ -53,15 +53,23 @@ class WhisperEngine:
         if not isinstance(audio, np.ndarray):
             raise TypeError("audio must be numpy.ndarray")
 
+       
         with self._lock:
-            segments, _ = self._model.transcribe(
+            segments, info = self._model.transcribe(
                 audio,
                 beam_size=5,
                 vad_filter=True,
             )
 
-        return " ".join(
+            segment_list = list(segments)
+
+       
+        text = " ".join(
             segment.text.strip()
-            for segment in segments
+            for segment in segment_list
             if segment.text.strip()
         ).strip()
+
+       
+        return text
+    

@@ -50,21 +50,29 @@ class Recorder:
         self._is_recording = False
 
     def _callback(
+            
+            
         self,
         indata: np.ndarray,
         frames: int,
         time_info: dict,
         status: sd.CallbackFlags
     ) -> None:
+        
+
         """Processes audio input chunks and manages callback status logs."""
         if status:
             logger.warning(f"[Recorder] Callback status: {status}")
 
         if self._is_recording:
             try:
-                self._queue.put_nowait(indata.copy().reshape(-1))
+                processed_data = indata.copy().reshape(-1)
+
+                self._queue.put_nowait(processed_data)
+
             except queue.Full:
                 logger.warning("[Recorder] Audio queue is full. Dropping frame.")
+            
 
     def start(self) -> None:
         """Initializes and starts the continuous audio stream."""
@@ -73,13 +81,16 @@ class Recorder:
                 return
 
             try:
+            
                 self._stream = sd.InputStream(
                     samplerate=self.sample_rate,
-                    channels=self.channels,
+                    channels= self.channels,
                     dtype=self.dtype,
                     blocksize=self.chunk_size,
+                    device=1,
                     callback=self._callback
                 )
+    
                 self._stream.start()
                 self._is_recording = True
             except sd.PortAudioError as e:

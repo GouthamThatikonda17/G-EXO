@@ -56,11 +56,8 @@ class MicrophoneListener:
             return
 
         if self.callback:
-
             self.callback(
-
-                indata.copy(),
-
+                bytes(indata),
             )
 
     # =====================================================
@@ -75,15 +72,21 @@ class MicrophoneListener:
 
         self.running = True
 
-        self.stream = sd.InputStream(
+        self.stream = sd.RawInputStream(
+  
+             samplerate=self.sample_rate,
 
-            samplerate=self.sample_rate,
+             channels=self.channels,
 
-            channels=self.channels,
+             dtype="int16",
 
-            callback=self._audio_callback,
+             blocksize=1280,
 
-        )
+             device=1,
+
+             callback=self._audio_callback,
+
+         )
 
         self.stream.start()
 

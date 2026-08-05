@@ -12,7 +12,6 @@ from __future__ import annotations
 import logging
 
 import numpy as np
-
 from voice.recorder import Recorder
 from voice.vad import VoiceActivityDetector
 from voice.whisper_engine import WhisperEngine
@@ -61,11 +60,12 @@ class SpeechToText:
         try:
             while True:
                 frame = self.recorder.read(timeout=0.5)
-                if frame is None:
-                    continue
+                    
 
+                
+                
                 if not speech_started:
-                    frames_waited += 1
+                    frames_waited += 1       
                     if self.vad.is_speech(frame):
                         speech_started = True
                         audio_buffer.append(frame)
@@ -86,12 +86,19 @@ class SpeechToText:
             return ""
 
         full_audio = np.concatenate(audio_buffer)
+        
 
         # Ignore bursts shorter than a typical syllable (e.g. 0.5 seconds)
         if len(full_audio) < self.recorder.sample_rate * 0.5:
             return ""
 
+       
+
+       
+
+       
         text = self.engine.transcribe(full_audio)
+       
 
         return text.strip()
 
