@@ -1,33 +1,24 @@
 """
 =========================================================
-Project G-EXO
-AI Planner
-Version : 4.0
+Project G-EXO AI Planner
+Version : 4.1
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
 
 import json
-
-from ai.gemini import GeminiProvider
+from ai.ai_service import AIService
 
 
 class AIPlanner:
-
     def __init__(self):
-
-        self.ai = GeminiProvider()
+        self.ai = AIService()
 
     def plan(self, message: str) -> dict:
-
         try:
-
             response = self.ai.plan(message)
-
             return json.loads(response)
-
         except Exception:
-
             return {
                 "intent": "chat",
                 "tool": None,
