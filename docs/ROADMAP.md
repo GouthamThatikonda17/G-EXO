@@ -2,27 +2,53 @@
 
 ## Milestone 1 — G-EXO Core ✅
 
-Status: Completed
+Status: Completed (v0.4.2)
 
 Features:
 
-- AI Integration (Gemini)
+- Application Composition Root
+- Modular Brain Architecture
+- Decision Engine
+- Decision Pipeline
+- Dispatcher
+- AIService Abstraction
+- Multi-Provider AI
+    - Gemini
+    - OpenRouter
+    - Ollama
+- Automatic Provider Fallback
 - Calculator
-- Memory
+- Memory Framework (Foundation)
 - Notes
 - Tasks
 - Reminders
 - File Manager
 - App Launcher
 - Web Launcher
-- Logging
+- Logging System
 - Configuration System
+- Desktop Runtime
+- Voice Runtime
 
-Goal:
+----------------------------------
 
-Create a stable software foundation.
+## Current Development 🚧
 
----
+Current Branch:
+sprint-4.3-memory
+
+Current Sprint:
+Sprint 4.3 — Memory Engine Foundation
+
+Next Release:
+v0.4.3
+
+Current Focus:
+
+- Integrate MemoryManager into GEXOBrain
+- MemorySnapshot
+- Working Memory
+- DecisionContext enrichment
 
 ## Milestone 2 — Mobile Companion 🚧
 
