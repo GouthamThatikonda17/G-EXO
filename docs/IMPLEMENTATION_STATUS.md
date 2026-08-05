@@ -234,3 +234,20 @@ Completed
 Approved
 
 Yes
+
+
+Sprint 3.4
+Status: Completed
+
+Summary
+-------
+• Introduced Application Composition Root.
+• Established single GEXOBrain ownership.
+• Implemented dependency injection for Desktop and VoiceRuntime.
+• Centralized BehaviorEngine ownership.
+• Desktop UI now consumes shared runtime state.
+• Architecture foundation complete.
+
+Approved
+--------
+Yes

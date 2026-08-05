@@ -1,8 +1,6 @@
 """
 =========================================================
-Project G-EXO Desktop
-Application Entry
-Version : 1.2
+Project G-EXO Desktop Application Entry Version : 1.4
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
@@ -16,36 +14,32 @@ PROJECT_ROOT = os.path.abspath(
         ".."
     )
 )
-
 BRAIN_DIR = os.path.join(
     PROJECT_ROOT,
     "brain"
 )
-
 if BRAIN_DIR not in sys.path:
-
     sys.path.insert(0, BRAIN_DIR)
 
 from PySide6.QtWidgets import QApplication
-
 from main_window import MainWindow
-
 from themes.dark_theme import DARK_THEME
+from runtime.application import Application
 
 
 def main():
-
     app = QApplication(sys.argv)
-
     app.setStyleSheet(DARK_THEME)
-
-    window = MainWindow()
-
+    
+    # =====================================================
+    # Application Composition Root Bootstrap
+    # =====================================================
+    app_root = Application()
+    
+    window = MainWindow(app_root.brain)
     window.show()
-
     sys.exit(app.exec())
 
 
 if __name__ == "__main__":
-
     main()

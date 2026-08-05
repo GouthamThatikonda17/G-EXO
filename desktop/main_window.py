@@ -1,108 +1,53 @@
-""" =========================================================
-Project G-EXO
-Desktop Main Window
-Version : 9.3
+"""
+=========================================================
+Project G-EXO Desktop Main Window Version : 9.2
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
-from PySide6.QtCore import Qt, QThread
-from PySide6.QtGui import QKeyEvent, QCloseEvent
-from PySide6.QtWidgets import QMainWindow
 
+from PySide6.QtCore import Qt, Signal, Slot
+from PySide6.QtGui import QKeyEvent
+from PySide6.QtWidgets import QMainWindow
 from assistant import GEXOBrain
 from scene.gexo_scene import GEXOScene
-from behavior.behavior_engine import BehaviorEngine
 from behavior.face_state import FaceState
-from workers.chat_worker import ChatWorker
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.brain = GEXOBrain()
-        self.behavior = BehaviorEngine()
-        
-        self._is_processing = False
-        self._worker_thread = None
-        self._worker = None
+    state_signal = Signal(object)
 
+    def __init__(self, brain: GEXOBrain):
+        super().__init__()
+        self.brain = brain
+        self.behavior = self.brain.behavior
         self.setWindowTitle("G-EXO")
         self.resize(1200, 750)
-
         self.scene = GEXOScene()
         self.setCentralWidget(
             self.scene
         )
-
         # ==========================================
-        # Behavior -> Scene
+        # Behavior -> Signal Bridge -> Scene
         # ==========================================
-        self.behavior.add_listener(
+        self.state_signal.connect(
             self.scene.set_state
+        )
+        self.behavior.add_listener(
+            self._on_behavior_state_changed
         )
         self.behavior.set_state(
             FaceState.IDLE
         )
 
     # =====================================================
-    # AI Processing
+    # Behavior State Slot (Thread-Safe Bridge)
     # =====================================================
-    def process_message(self, text: str):
-        if self._is_processing:
-            print("[Desktop] Request rejected: Another interaction is already running.")
-            return
-            
-        self._is_processing = True
-        self.behavior.set_state(FaceState.THINKING)
-        
-        self._worker_thread = QThread()
-        self._worker = ChatWorker(
-            self.brain.process,
-            text,
-            source="desktop"
-        )
-        self._worker.moveToThread(self._worker_thread)
-        
-        # Execution flow
-        self._worker_thread.started.connect(self._worker.run)
-        self._worker.finished.connect(self._on_process_finished)
-        self._worker.failed.connect(self._on_process_failed)
-        
-        # Qt Recommended Thread Lifecycle Cleanup
-        self._worker.finished.connect(self._worker_thread.quit)
-        self._worker.failed.connect(self._worker_thread.quit)
-        
-        self._worker.finished.connect(self._worker.deleteLater)
-        self._worker.failed.connect(self._worker.deleteLater)
-        
-        self._worker_thread.finished.connect(self._worker_thread.deleteLater)
-        
-        # Centralized State Cleanup
-        self._worker_thread.finished.connect(self._cleanup_worker)
-        
-        self._worker_thread.start()
-
-    def _cleanup_worker(self):
-        """Executed only after the QThread has completely finished."""
-        self._worker_thread = None
-        self._worker = None
-        self._is_processing = False
-
-    def _on_process_finished(self, response):
-        self.behavior.set_state(FaceState.SPEAKING)
-        
-        if response is not None and hasattr(response, "message"):
-            print(f"[Desktop] G-EXO: {response.message}")
-        else:
-            print("[Desktop] G-EXO: Received invalid response.")
-            
-        self.behavior.set_state(FaceState.IDLE)
-
-    def _on_process_failed(self, error: str):
-        self.behavior.set_state(FaceState.ERROR)
-        print(f"[Desktop Error] {error}")
-        
-        self.behavior.set_state(FaceState.IDLE)
+    @Slot(object)
+    def _on_behavior_state_changed(
+        self,
+        state,
+    ):
+        self.state_signal.emit(state)
 
     # =====================================================
     # Keyboard (Temporary)
@@ -132,19 +77,7 @@ class MainWindow(QMainWindow):
             self.behavior.set_state(
                 FaceState.ERROR
             )
-        elif key == Qt.Key_6:
-            self.process_message("Desktop thread test")
         else:
             super().keyPressEvent(
                 event
             )
-
-    # =====================================================
-    # Shutdown
-    # =====================================================
-    def closeEvent(self, event: QCloseEvent):
-        if self._worker_thread is not None and self._worker_thread.isRunning():
-            self._worker_thread.quit()
-            self._worker_thread.wait()
-            
-        super().closeEvent(event)

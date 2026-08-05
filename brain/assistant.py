@@ -10,6 +10,7 @@ Developer : Thatikonda Goutham Teja
 from core.dispatcher import Dispatcher
 from core.request import Request
 from core.response import Response
+from behavior.behavior_engine import BehaviorEngine
 
 
 class GEXOBrain:
@@ -29,7 +30,7 @@ class GEXOBrain:
     def __init__(self):
 
         self.dispatcher = Dispatcher()
-
+        self.behavior = BehaviorEngine()
     # =====================================================
     # PROCESS
     # =====================================================
