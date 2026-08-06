@@ -1,7 +1,8 @@
+# brain/ai/intent_router.py
 """
 =========================================================
 Project G-EXO Intent Router
-Version : 2.1
+Version : 2.2
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
@@ -26,6 +27,18 @@ class IntentRouter:
             "save",
             "forget",
             "my",
+            "file",
+            "folder",
+            "directory",
+            "read",
+            "write",
+            "rename",
+            "move",
+            "copy",
+            "delete",
+            "search",
+            "list",
+            "create",
         }
         
         # Build dynamic regex using the shared application identities.
@@ -66,7 +79,7 @@ class IntentRouter:
         # =====================================================
         # PLANNER (WHOLE WORD MATCHING)
         # =====================================================
-        # Uses explicit word boundaries to prevent substring false positives
+        # Uses explicit word boundaries (\b) to prevent substring false positives
         if any(re.search(rf"\b{keyword}\b", text) for keyword in self.planner_keywords):
             return {
                 "route": "planner"

@@ -1,7 +1,8 @@
+# brain/tools/models.py
 """
 =========================================================
 Project G-EXO Tool Models
-Version : 1.0
+Version : 1.1
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
@@ -12,7 +13,8 @@ from typing import Any
 class ToolResult:
     """
     Standardized return contract for the Tool Layer.
-    Ensures ResponseBuilder can format UI messages agnostically.
+    Migration in progress: Newly implemented tools must return this object.
+    Legacy tools will be migrated in future sprints.
     """
     success: bool
     message: str

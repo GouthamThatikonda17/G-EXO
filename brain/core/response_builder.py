@@ -1,7 +1,8 @@
+# brain/core/response_builder.py
 """
 =========================================================
 Project G-EXO Response Builder
-Version : 1.2
+Version : 1.3
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
@@ -17,9 +18,9 @@ class ResponseBuilder:
         arguments = plan.get("arguments", {})
 
         # =====================================================
-        # STANDARDIZED TOOL RESULT
+        # MODERN TOOL RESULT (MIGRATION IN PROGRESS)
         # =====================================================
-        # Tool-agnostic formatting. Extensively scalable.
+        # Standardized payload for modern tools (e.g., File Tool, Apps Tool).
         if isinstance(result, ToolResult):
             return Response(
                 success=result.success,
