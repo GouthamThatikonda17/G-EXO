@@ -1,11 +1,12 @@
 """
 =========================================================
 Project G-EXO Intent Router
-Version : 2.0
+Version : 2.1
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
 import re
+from tools.app_metadata import SUPPORTED_APPS
 
 class IntentRouter:
     def __init__(self):
@@ -26,15 +27,26 @@ class IntentRouter:
             "forget",
             "my",
         }
+        
+        # Build dynamic regex using the shared application identities.
+        # This keeps routing strict and dynamic without duplicate app lists.
+        supported_apps = "|".join(re.escape(app) for app in SUPPORTED_APPS.keys())
+        self.app_pattern = re.compile(
+            rf"^(open|launch|start|run)\s+({supported_apps})$", 
+            re.IGNORECASE
+        )
 
     def _is_math_expression(self, text: str) -> bool:
         text = text.strip()
         pattern = r"^\s*\d+(\.\d+)?\s*[\+\-\*/%]\s*\d+(\.\d+)?\s*$"
         return re.match(pattern, text) is not None
 
+    def _is_app_command(self, text: str) -> bool:
+        return self.app_pattern.match(text.strip()) is not None
+
     def route(self, message: str) -> dict:
         text = message.lower().strip()
-
+        
         # =====================================================
         # LOCAL
         # =====================================================
@@ -42,15 +54,23 @@ class IntentRouter:
             return {
                 "route": "local"
             }
+            
+        # =====================================================
+        # COMMAND PATTERN (STRICT ROUTING)
+        # =====================================================
+        if self._is_app_command(text):
+            return {
+                "route": "planner"
+            }
 
         # =====================================================
-        # PLANNER
+        # PLANNER (WHOLE WORD MATCHING)
         # =====================================================
-        for keyword in self.planner_keywords:
-            if re.search(rf"\b{re.escape(keyword)}\b", text):
-                return {
-                    "route": "planner"
-                }
+        # Uses explicit word boundaries to prevent substring false positives
+        if any(re.search(rf"\b{keyword}\b", text) for keyword in self.planner_keywords):
+            return {
+                "route": "planner"
+            }
 
         # =====================================================
         # CALCULATOR

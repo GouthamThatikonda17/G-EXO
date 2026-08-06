@@ -1,70 +1,68 @@
 """
 =========================================================
-Project G-EXO
-Response Builder
-Version : 1.0
+Project G-EXO Response Builder
+Version : 1.2
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
-
 from core.response import Response
-
+from tools.models import ToolResult
 
 class ResponseBuilder:
-
     @staticmethod
     def build(plan: dict, result=None) -> Response:
-
         intent = plan.get("intent")
         tool = plan.get("tool")
         action = plan.get("action")
         arguments = plan.get("arguments", {})
 
         # =====================================================
-        # MEMORY
+        # STANDARDIZED TOOL RESULT
         # =====================================================
+        # Tool-agnostic formatting. Extensively scalable.
+        if isinstance(result, ToolResult):
+            return Response(
+                success=result.success,
+                message=result.message,
+                data=result.data,
+            )
 
+        # =====================================================
+        # TEMPORARY COMPATIBILITY: LEGACY MEMORY
+        # =====================================================
         if intent == "memory":
-
             key = arguments.get("key", "")
             value = arguments.get("value", "")
-
             return Response(
                 success=True,
-                message=f"✅ I'll remember that your {key.replace('_', ' ')} is {value}.",
+                message=f"  I'll remember that your {key.replace('_', ' ')} is {value}.",
                 data=result,
             )
 
         # =====================================================
-        # NOTES
+        # TEMPORARY COMPATIBILITY: LEGACY NOTES
         # =====================================================
-
         if intent == "notes":
-
             return Response(
                 success=True,
-                message="📝 Note added successfully.",
+                message="  Note added successfully.",
                 data=result,
             )
 
         # =====================================================
-        # TASKS
+        # TEMPORARY COMPATIBILITY: LEGACY TASKS
         # =====================================================
-
         if intent == "tasks":
-
             return Response(
                 success=True,
-                message="✅ Task added successfully.",
+                message="  Task added successfully.",
                 data=result,
             )
 
         # =====================================================
         # CHAT
         # =====================================================
-
         if intent == "chat":
-
             return Response(
                 success=True,
                 message=str(result),
@@ -73,7 +71,6 @@ class ResponseBuilder:
         # =====================================================
         # DEFAULT
         # =====================================================
-
         return Response(
             success=True,
             message="Done.",
