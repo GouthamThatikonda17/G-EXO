@@ -44,6 +44,15 @@ class IntentRouter:
             }
 
         # =====================================================
+        # PLANNER
+        # =====================================================
+        for keyword in self.planner_keywords:
+            if re.search(rf"\b{re.escape(keyword)}\b", text):
+                return {
+                    "route": "planner"
+                }
+
+        # =====================================================
         # CALCULATOR
         # =====================================================
         if self._is_math_expression(text):
@@ -52,8 +61,8 @@ class IntentRouter:
             }
 
         # =====================================================
-        # DEFAULT (DYNAMIC PLANNER)
+        # DEFAULT
         # =====================================================
         return {
-            "route": "planner"
+            "route": "chat"
         }

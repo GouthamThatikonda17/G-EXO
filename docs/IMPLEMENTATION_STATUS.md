@@ -496,25 +496,87 @@ The remainder of the G-EXO architecture remains completely isolated from vendor-
 
 ---
 
+# Sprint 4.3 — Memory Engine Foundation
+
+## Status
+
+Completed
+
+## Objective
+
+Establish the architectural foundation for G-EXO's Memory Engine while preserving the Decision Pipeline and AI Provider abstraction.
+
+## Implemented
+
+### GEXOBrain
+
+- Integrated MemoryManager into the application root.
+- Integrated DecisionEngine orchestration.
+- Logged incoming Request objects into Working Memory.
+- Logged outgoing Response objects into Working Memory.
+- Restored public BehaviorEngine compatibility for Desktop.
+
+### MemoryManager
+
+- Added immutable MemorySnapshot generation.
+- Exposes Working, Short-Term and Long-Term memory through a read-only transport object.
+
+### Decision Engine
+
+- DecisionEngine now accepts MemorySnapshot.
+- DecisionContext is constructed internally.
+- Memory is prepared for future reasoning without changing current behavior.
+
+### Intent Router
+
+- Replaced substring keyword matching with whole-word matching.
+- Eliminated false routing cases such as:
+  - note → notepad
+  - add → address
+  - my → anatomy
+
+### Dispatcher
+
+- DecisionResult is now propagated through the dispatcher pipeline while preserving existing routing behavior.
+
+## Validation
+
+Validated:
+
+- CLI
+- Desktop UI
+- Decision Pipeline
+- Memory Engine initialization
+- Provider Architecture
+- Multi-provider fallback
+
+## Architecture Impact
+
+New architectural ownership:
+
+Application
+    ↓
+GEXOBrain
+ ├── Dispatcher
+ ├── DecisionEngine
+ ├── MemoryManager
+ └── BehaviorEngine
+
+MemoryManager
+ ├── Working Memory
+ ├── Short Memory
+ └── Long Memory
+
+DecisionEngine receives immutable MemorySnapshot objects only.
+
+## Public APIs
+
+No public APIs were removed.
+
+Desktop, CLI, Voice and future Mobile interfaces remain compatible.
+
 ## Next Sprint
 
-Phase 4 Intelligence
+Sprint 4.4
 
-Sprint 4.3
-
-Memory Integration
-
-Planned objectives
-
-- Working Memory
-- Short-Term Memory
-- Long-Term Memory
-- Memory Retrieval Pipeline
-- Memory-aware DecisionContext
-- Memory integration into DecisionEngine
-
-Status
-
-READY TO BEGIN
-
-
+Planner & Tool Registry Integration
