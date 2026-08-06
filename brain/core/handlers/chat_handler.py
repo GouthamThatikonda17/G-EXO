@@ -5,13 +5,12 @@ Version : 1.1
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
-
 from ai.ai_service import AIService
 from core.response import Response
 
-
 class ChatHandler:
     def __init__(self):
+        # Restored AIService abstraction for automatic provider fallback
         self.ai = AIService()
 
     def handle(self, request):

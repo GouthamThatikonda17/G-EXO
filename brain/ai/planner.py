@@ -1,22 +1,22 @@
-# brain/ai/planner.py
 """
 =========================================================
 Project G-EXO AI Planner
-Version : 4.1
+Version : 4.2
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
 import json
-from ai.gemini import GeminiProvider
+from ai.ai_service import AIService
 
 class AIPlanner:
     def __init__(self):
-        self.ai = GeminiProvider()
+        # Restored AIService abstraction for automatic provider fallback
+        self.ai = AIService()
 
     def plan(self, message: str) -> dict:
         try:
             response = self.ai.plan(message)
-            
+           
             # Clean markdown JSON block formatting if hallucinated
             clean_response = response.strip()
             if clean_response.startswith("```json"):
@@ -33,7 +33,12 @@ class AIPlanner:
             if clean_response and not clean_response.startswith("{"):
                 clean_response = "{" + clean_response + "}"
                 
-            return json.loads(clean_response)
+            plan = json.loads(clean_response)
+
+           
+
+            return plan
+        
         except Exception:
             return {
                 "intent": "chat",

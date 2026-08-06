@@ -1,1 +1,14 @@
-[]
+[
+    {
+        "id": 1,
+        "task": "Complete G-EXO project",
+        "status": "Pending",
+        "created": "2026-08-06 19:56:32"
+    },
+    {
+        "id": 2,
+        "task": "add reminders tomorrow 3am",
+        "status": "Pending",
+        "created": "2026-08-06 20:09:43"
+    }
+]

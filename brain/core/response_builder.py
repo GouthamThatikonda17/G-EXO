@@ -1,11 +1,11 @@
-# brain/core/response_builder.py
 """
 =========================================================
 Project G-EXO Response Builder
-Version : 1.3
+Version : 1.4
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
+
 from core.response import Response
 from tools.models import ToolResult
 
@@ -34,9 +34,41 @@ class ResponseBuilder:
         if intent == "memory":
             key = arguments.get("key", "")
             value = arguments.get("value", "")
+            
+            if action == "remember":
+                return Response(
+                    success=True,
+                    message=f"  I'll remember that your {key.replace('_', ' ')} is {value}.",
+                    data=result,
+                )
+            elif action == "recall":
+                if result:
+                    return Response(
+                        success=True,
+                        message=f"  {result}",
+                        data=result,
+                    )
+                return Response(
+                    success=False,
+                    message=f"  I don't remember anything about {key.replace('_', ' ')}.",
+                    data=result,
+                )
+            elif action == "forget":
+                if result:
+                    return Response(
+                        success=True,
+                        message=f"  I have forgotten about {key.replace('_', ' ')}.",
+                        data=result,
+                    )
+                return Response(
+                    success=False,
+                    message=f"  I don't have any memory of {key.replace('_', ' ')}.",
+                    data=result,
+                )
+            
             return Response(
                 success=True,
-                message=f"  I'll remember that your {key.replace('_', ' ')} is {value}.",
+                message="  Memory action completed.",
                 data=result,
             )
 
@@ -44,9 +76,41 @@ class ResponseBuilder:
         # TEMPORARY COMPATIBILITY: LEGACY NOTES
         # =====================================================
         if intent == "notes":
+            if action == "add":
+                return Response(
+                    success=True,
+                    message="  Note added successfully.",
+                    data=result,
+                )
+            elif action == "show":
+                if isinstance(result, list) and result:
+                    formatted = "\n".join(f"  {i+1}. {note}" for i, note in enumerate(result))
+                    return Response(
+                        success=True,
+                        message=f"  Here are your notes:\n{formatted}",
+                        data=result,
+                    )
+                return Response(
+                    success=True,
+                    message="  You have no notes.",
+                    data=result,
+                )
+            elif action == "delete":
+                if result:
+                    return Response(
+                        success=True,
+                        message="  Note deleted successfully.",
+                        data=result,
+                    )
+                return Response(
+                    success=False,
+                    message="  Failed to delete note. Invalid index.",
+                    data=result,
+                )
+
             return Response(
                 success=True,
-                message="  Note added successfully.",
+                message="  Notes action completed.",
                 data=result,
             )
 
@@ -54,9 +118,56 @@ class ResponseBuilder:
         # TEMPORARY COMPATIBILITY: LEGACY TASKS
         # =====================================================
         if intent == "tasks":
+            if action == "add":
+                return Response(
+                    success=True,
+                    message="  Task added successfully.",
+                    data=result,
+                )
+            elif action == "show":
+                if isinstance(result, list) and result:
+                    formatted = "\n".join(
+                        f"  {t.get('id', '?')}. [{t.get('status', 'Pending')}] {t.get('task', '')}" 
+                        for t in result
+                    )
+                    return Response(
+                        success=True,
+                        message=f"  Here are your tasks:\n{formatted}",
+                        data=result,
+                    )
+                return Response(
+                    success=True,
+                    message="  You have no tasks.",
+                    data=result,
+                )
+            elif action == "complete":
+                if result:
+                    return Response(
+                        success=True,
+                        message="  Task marked as completed.",
+                        data=result,
+                    )
+                return Response(
+                    success=False,
+                    message="  Failed to complete task.",
+                    data=result,
+                )
+            elif action == "delete":
+                if result:
+                    return Response(
+                        success=True,
+                        message="  Task deleted successfully.",
+                        data=result,
+                    )
+                return Response(
+                    success=False,
+                    message="  Failed to delete task.",
+                    data=result,
+                )
+
             return Response(
                 success=True,
-                message="  Task added successfully.",
+                message="  Task action completed.",
                 data=result,
             )
 
