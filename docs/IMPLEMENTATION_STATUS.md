@@ -1,10 +1,10 @@
-# Project G-EXO: Master Implementation Roadmap (Version 1.1)
+# Project G-EXO: Master Implementation Roadmap (Version 1.4)
 
 ## 1. Document Authority
 This document is the absolute source of truth for the engineering state and implementation roadmap of Project G-EXO. It governs all architectural decisions, subsystem tracking, and sprint planning. No architectural shifts, subsystem replacements, or deviations from the phased implementation may occur without updating this document.
 
 ## 2. Executive Summary
-This document serves as the official, living roadmap for Project G-EXO. It outlines the current state of the codebase, identifies technical debt, and establishes a strict, phased approach to reaching production quality. The backend now features a fully operational Voice Pipeline and a verified Core Request Pipeline, advancing the system toward true multi-modal, thread-safe interaction.
+This document serves as the official, living roadmap for Project G-EXO. It outlines the current state of the codebase, identifies technical debt, and establishes a strict, phased approach to reaching production quality. The backend contains a structured execution pipeline with planner JSON extraction, validation, retry/error handling, deterministic tool execution, and standardized result handling.
 
 ## 3. AI Engineering Rules
 All automated and AI-assisted engineering tasks must strictly adhere to the following rules:
@@ -32,551 +32,66 @@ Sprints are strictly scoped. Code modifications must remain absolutely confined 
 *   **Production Ready**: The subsystem is fully tested, optimized, handles edge cases safely, and is ready for deployment.
 
 ## 7. Repository Health
-Overall, the repository maintains a clear, decoupled architecture separating the PyQt6 frontend (`desktop/`) from the backend (`brain/`). The Core Request Pipeline, Voice Runtime, and Desktop asynchronous execution pipeline are now runtime-verified. Desktop requests execute safely on dedicated worker threads without blocking the PyQt event loop, and worker lifecycle management has been validated through graceful shutdown testing. Remaining work focuses on full desktop UI integration, backend/frontend synchronization, and production hardening.
+Overall, the repository maintains a clear, decoupled architecture. The Core Request Pipeline is runtime-verified and heavily stabilized, structuring tool execution predictably. Remaining work focuses on the internal state and personality engines before progressing to mobile and physical hardware integration.
 
 ## 8. Current Entry Point
 Project G-EXO operates with a decoupled architecture, resulting in dual entry points:
-*   **Backend (Brain)**: `brain/main.py` initializes the FastAPI server, core dispatchers, and background runtimes (Voice, Memory).
-*   **Frontend (Desktop)**: `desktop/app.py` initializes the PyQt6 application, launching the visual engine and connecting to the backend via asynchronous workers.
+*   **Backend (Brain)**: `brain/main.py` initializes the core dispatchers and CLI (Development/Testing interface).
+*   **Frontend (Desktop)**: `desktop/app.py` initializes the PyQt6 application (Development/Testing interface).
 
 ## 9. Runtime Flow
 The current execution paths and their connection statuses:
 
-### Request Pipeline
-1.  **User Input**: Captured via `desktop/widgets/message_input.py`.
-2.  **Dispatching**: Routed through `brain/api/app.py` -> `brain/core/dispatcher.py` -> `brain/core/handlers/`.
-3.  **AI & Processing**: Handoff from `brain/core/handlers/` -> `brain/ai/planner.py` -> `brain/tools/`.
-4.  **Response & Action**: Returned via `brain/core/response_builder.py` -> `desktop/workers/chat_worker.py` -> UI/Visuals.
-*   **Status**: Fully implemented and runtime verified. The execution loop seamlessly connects the dispatcher to the AI planner and tool executor. Responses trigger appropriate downstream behavior, though UI visual binding remains partial.
+### Currently Implemented Architecture Pipeline
+1.  **User Input**
+2.  **Intent/Command Routing** (`IntentRouter` keyword matching)
+3.  **Dispatcher** (Routes to proper handler)
+4.  **Planner** (`AIPlanner` with structured JSON planning, extraction, validation, and retries)
+5.  **Executor** (`AIExecutor` unpacks parameters)
+6.  **Tool Registry** (`ToolRegistry` cross-references available logic)
+7.  **Deterministic Tool** (Python tool execution)
+8.  **Persistent Storage / External Action** (`data/*.json` updates or system calls)
+9.  **ToolResult** (Returns standardized success, message, data)
+10. **ResponseBuilder** (Formats payload)
+11. **User Response**
 
 ### Voice Pipeline
 1.  **Audio Capture**: Handled continuously by `brain/voice/recorder.py` and PortAudio via `brain/wakeword/listener.py`.
 2.  **Wake Word Detection**: Processed by `brain/wakeword/detector.py`.
-3.  **Runtime Orchestration**: Handoff to `brain/runtime/voice_runtime.py`, which spawns a dedicated worker thread and stops the wake-word listener safely. Thread-safe interaction locking prevents concurrent wake events.
-4.  **Speech-to-Text (STT)**: Executed by `brain/voice/speech_to_text.py` utilizing `brain/voice/vad.py` and `brain/voice/whisper_engine.py`.
+3.  **Runtime Orchestration**: Handoff to `brain/runtime/voice_runtime.py`.
+4.  **Speech-to-Text (STT)**: Executed by `brain/voice/speech_to_text.py`.
 5.  **Backend Processing**: Routed to the Brain (`assistant.py`) for processing.
 6.  **Text-to-Speech (TTS)**: Synthesized by `brain/voice/text_to_speech.py`.
-7.  **Completion**: Wake-word listener restarts safely.
-*   **Status**: Fully operational and runtime verified. The listener lifecycle is robust, avoiding PortAudio deadlocks, and the end-to-end system runs smoothly via the orchestrating worker thread.
 
-## 10. Current State of Subsystems
-| Subsystem | Implemented | Integrated | Production Ready | Notes |
-| :--- | :--- | :--- | :--- | :--- |
-| **Desktop UI & Visuals** | Yes | Partial | No | Vector face engine exists. Asynchronous Brain execution is integrated. Chat widgets remain disconnected pending Sprint 3.3. |
-| **API & Schemas** | Yes | Partial | No | FastAPI routes and schemas are implemented. Desktop currently follows the direct `GEXOBrain` architecture. |
-| **AI & Planner** | Yes | Yes | No | Dispatcher, planner, Gemini provider, and tool execution are fully integrated and runtime verified. |
-| **Memory System** | Partial | Partial | No | Memory execution is integrated. Background consolidation lifecycle remains incomplete. |
-| **Voice Runtime** | Yes | Yes | No | Fully operational. Thread-safe worker architecture verified. |
-| **Decision Engine** | No | No | No | Rules and context evaluation require expansion. |
-| **Emotion & Personality** | No | No | No | Modules remain structural stubs. |
-| **Testing Suite** | Partial | Partial | No | Runtime validation completed for core execution paths. Automated test coverage remains limited. |
-
-## 11. Technical Debt to Resolve
-* **[PRIORITY]** Audit, deprecate, then remove if unused the `brain/legacy_*.py` files to enforce the use of `brain/memory/` and `brain/tools/`.
-* Audit ownership, determine why duplicate implementations exist, and consolidate only if architectural responsibilities overlap between `brain/voice/wake_word.py` and `brain/wakeword/`.
-* Improve Text-to-Speech Unicode handling.
-* Prevent wake-word self-triggering during speaker playback.
-* Replace remaining runtime print statements with structured logging.
-* Expand automated runtime integration tests.
-
-## 12. Future Scalability Tasks
-*   Migrate JSON storage (`data/*.json`) to a thread-safe local database (e.g., SQLite or a vector database) to support memory scaling and concurrent operations.
-
-## 13. Implementation Phases
-
-### Phase 1: Core Consolidation & Cleanup (Completed)
-*   **Goal**: Stabilize the foundation by removing duplicate code and finalizing module boundaries.
-*   **Tasks**:
-    *   Audit, deprecate, then remove if unused legacy memory/task files.
-    *   Audit and consolidate the Wake Word pipeline overlapping logic.
-    *   Ensure all configuration is loaded via environment variables rather than hardcoded fallbacks.
-
-### Phase 2: Intelligence & Memory Wiring (Completed)
-*   **Goal**: Stabilize the memory lifecycle and expand AI capabilities.
-*   **Tasks**:
-    *   Extend `brain/memory/memory_manager.py` to handle Working -> Short -> Long term consolidation.
-
-### Phase 3: Runtimes & UI Synchronization (In Progress)
-
-**Goal**
-
-Ensure the backend and frontend runtimes communicate safely without blocking execution while progressively integrating the desktop interface.
-
-**Completed**
-
-- Sprint 3.1 — Voice Runtime thread safety completed.
-- Sprint 3.2 — Desktop asynchronous Brain execution completed.
-- ChatWorker integrated with `MainWindow`.
-- Dedicated `QThread` execution verified.
-- Worker lifecycle cleanup implemented.
-- Graceful shutdown verified.
-- Concurrent request protection implemented.
-
-**Remaining**
-
-- Sprint 3.3 — Integrate existing desktop widgets (`ChatArea`, `MessageInput`, `Sidebar`, `TopBar`).
-- Synchronize desktop message lifecycle with `BehaviorEngine`.
-- Connect desktop widgets to `ChatWorker`.
-- Complete frontend/backend runtime synchronization.
-
-### Phase 4: Emotion, Behavior, and State Generation
-*   **Goal**: Bring the robot to life by connecting backend decisions to frontend visuals.
-*   **Tasks**:
-    *   Implement `brain/emotion/` and `brain/personality/` (extend existing state architectures).
-    *   Wire the Decision Engine to emit state changes to `desktop/visual/engine/face_controller.py`.
-
-### Phase 5: Hardening & Hardware
-*   **Goal**: Production readiness and physical robot integration.
-*   **Tasks**:
-    *   Complete the PyTest suite across all modules.
-    *   Implement hardware I/O interfaces per hardware specifications.
-
-## 14. Sprint History
-
-### Sprint 1 – Speech Runtime & Pipeline
-
-Status: Completed
-
-Scope:
-- brain/voice/whisper_engine.py
-- brain/voice/speech_to_text.py
-- brain/voice/recorder.py
-- brain/voice/vad.py
-- brain/runtime/voice_runtime.py
-
-Result:
-End-to-end speech pipeline has been implemented and runtime verified. VoiceRuntime utilizes a dedicated worker thread with thread-safe interaction locking and safely manages the WakeWord listener lifecycle without deadlocking PortAudio.
-
-Commit:
-Completed
-
-Approved:
-Yes
-
-### Sprint 2 – Core Request Pipeline Integration
-
-Status: Completed
-
-Scope
-
-- brain/core/dispatcher.py
-- brain/core/handlers/
-- brain/ai/planner.py
-- brain/tools/
-- brain/memory/
-- assistant.py
-
-Result
-
-Dispatcher, planner, tool execution, memory execution, and Gemini processing were fully integrated into the request pipeline. Runtime verification confirms successful end-to-end request processing across local tools and AI responses.
-
-Commit
-
-Completed
-
-Approved
-
-Yes
-
-
-### Sprint 3.1 – Voice Runtime Thread Safety
-
-Status: Completed
-
-Scope
-
-- brain/runtime/voice_runtime.py
-
-Result
-
-Introduced a dedicated interaction worker thread for the Voice Runtime, eliminating PortAudio callback blocking and microphone contention. Implemented thread-safe interaction locking, safe listener lifecycle management, and verified end-to-end voice execution.
-
-Commit
-
-Completed
-
-Approved
-
-Yes
-
----
-
-### Sprint 3.2 – Desktop Asynchronous Brain Execution
-
-Status: Completed
-
-Scope
-
-- desktop/main_window.py
-
-Result
-
-Integrated asynchronous desktop execution using `ChatWorker` and `QThread` while preserving the direct `GEXOBrain` architecture. Implemented concurrency protection, centralized worker lifecycle cleanup, behavior state synchronization, temporary development trigger, and graceful shutdown handling. Runtime testing verified responsive UI, correct worker lifecycle management, and clean application shutdown.
-
-Verified
-
-✓ Desktop remains responsive during AI execution
-
-✓ `ChatWorker` executes `GEXOBrain.process()`
-
-✓ Concurrent requests are rejected safely
-
-✓ Worker lifecycle cleanup centralized
-
-✓ Graceful shutdown verified
-
-✓ Behavior synchronization (Idle → Thinking → Speaking → Idle)
-
-Commit
-
-Completed
-
-Approved
-
-Yes
-
-
-Sprint 3.4
-Status: Completed
-
-Summary
--------
-• Introduced Application Composition Root.
-• Established single GEXOBrain ownership.
-• Implemented dependency injection for Desktop and VoiceRuntime.
-• Centralized BehaviorEngine ownership.
-• Desktop UI now consumes shared runtime state.
-• Architecture foundation complete.
-
-Approved
---------
-Yes
-
-
-# =========================================================
-# Sprint 4.2B — Multi-Provider AI Architecture
-# Status: COMPLETE
-# =========================================================
-
-## Overview
-
-Sprint 4.2B completes the AI abstraction layer for Project G-EXO.
-
-The AI subsystem is now provider-independent, allowing G-EXO to communicate with multiple Large Language Model providers through a unified architecture while preserving the existing execution pipeline.
-
-No architectural changes were made to GEXOBrain, Dispatcher, DecisionEngine, BehaviorEngine, Runtime, Desktop UI, or routing logic.
-
----
-
-## Objectives Completed
-
-✓ Introduced a unified AIService abstraction layer.
-
-✓ Implemented provider-based architecture using the AIProvider interface.
-
-✓ Added support for multiple AI providers.
-
-- Gemini
-- OpenRouter
-- Ollama
-
-✓ Implemented automatic provider fallback.
-
-✓ Added standardized provider exception hierarchy.
-
-✓ Added session-level provider availability tracking.
-
-✓ Preserved existing public APIs.
-
-✓ Preserved ChatHandler and Planner interfaces.
-
-✓ Preserved Decision Pipeline.
-
-✓ Preserved Desktop, CLI and Voice runtime compatibility.
-
----
-
-## New Components
-
-### AIService
-
-Location
-
-brain/ai/ai_service.py
-
-Responsibilities
-
-- Central entry point for all LLM requests
-- Lazy provider initialization
-- Provider caching
-- Automatic provider fallback
-- Configuration loading
-- Provider availability management
-
----
-
-### Provider Exception Hierarchy
-
-Location
-
-brain/ai/exceptions.py
-
-Hierarchy
-
-ProviderError
-
-├── ProviderFatalError
-
-│ ├── ProviderAuthenticationError
-
-│ ├── ProviderModelNotFoundError
-
-│ └── ProviderQuotaExceededError
-
-└── ProviderRetryableError
-
-└── ProviderNetworkError
-
-Purpose
-
-Provides a provider-independent exception model for AIService.
-
----
-
-### Supported Providers
-
-GeminiProvider
-
-- Google Gemini API
-
-OpenRouterProvider
-
-- OpenRouter API
-- Supports free and paid models
-
-OllamaProvider
-
-- Local offline inference
-- Zero API usage
-- No internet required
-
----
-
-## Provider Configuration
-
-Configuration is managed entirely through environment variables.
-
-Supported variables include
-
-- AI_PROVIDER_ORDER
-
-Gemini
-
-- GEMINI_API_KEY
-- GEMINI_MODEL
-
-OpenRouter
-
-- OPENROUTER_API_KEY
-- OPENROUTER_MODEL
-
-Ollama
-
-- OLLAMA_HOST
-- OLLAMA_MODEL
-
----
-
-## Fallback Architecture
-
-Example
-
-Gemini
-↓
-
-OpenRouter
-↓
-
-Ollama
-
-Fatal provider failures automatically disable the provider for the current session.
-
-Retryable failures continue through the fallback chain without interrupting execution.
-
----
-
-## Logging
-
-The following events are now logged.
-
-- Provider initialization
-- Provider failures
-- Authentication failures
-- Quota failures
-- Model configuration failures
-- Automatic fallback
-- Decision pipeline
-- Requests
-- Responses
-
----
-
-## Validation Completed
-
-✓ Desktop launches successfully.
-
-✓ CLI launches successfully.
-
-✓ Single GEXOBrain ownership preserved.
-
-✓ DecisionEngine integration preserved.
-
-✓ Dispatcher unchanged externally.
-
-✓ BehaviorEngine unaffected.
-
-✓ Automatic provider fallback verified.
-
-✓ OpenRouter verified.
-
-✓ Ollama verified.
-
-✓ Gemini failure handling verified.
-
-✓ Existing handlers remain functional.
-
-✓ No routing regressions observed.
-
----
-
-## Repository Changes
-
-### Files Created
-
-brain/ai/ai_service.py
-
-brain/ai/openrouter_provider.py
-
-brain/ai/ollama_provider.py
-
-brain/ai/exceptions.py
-
----
-
-### Files Modified
-
-brain/ai/provider.py
-
-brain/ai/gemini.py
-
-brain/ai/planner.py
-
-brain/core/handlers/chat_handler.py
-
----
-
-## Architectural Result
-
-The AI subsystem is now fully provider-agnostic.
-
-Future providers can be integrated without changing the execution pipeline.
-
-Supported future providers include
-
-- OpenAI
-- Claude
-- Grok
-- DeepSeek
-- Mistral
-- LM Studio
-- vLLM
-- Any OpenAI-compatible endpoint
-
-The remainder of the G-EXO architecture remains completely isolated from vendor-specific SDKs.
-
----
-
-# Sprint 4.3 — Memory Engine Foundation
-
-## Status
-
-Completed
-
-## Objective
-
-Establish the architectural foundation for G-EXO's Memory Engine while preserving the Decision Pipeline and AI Provider abstraction.
-
-## Implemented
-
-### GEXOBrain
-
-- Integrated MemoryManager into the application root.
-- Integrated DecisionEngine orchestration.
-- Logged incoming Request objects into Working Memory.
-- Logged outgoing Response objects into Working Memory.
-- Restored public BehaviorEngine compatibility for Desktop.
-
-### MemoryManager
-
-- Added immutable MemorySnapshot generation.
-- Exposes Working, Short-Term and Long-Term memory through a read-only transport object.
-
-### Decision Engine
-
-- DecisionEngine now accepts MemorySnapshot.
-- DecisionContext is constructed internally.
-- Memory is prepared for future reasoning without changing current behavior.
-
-### Intent Router
-
-- Replaced substring keyword matching with whole-word matching.
-- Eliminated false routing cases such as:
-  - note → notepad
-  - add → address
-  - my → anatomy
-
-### Dispatcher
-
-- DecisionResult is now propagated through the dispatcher pipeline while preserving existing routing behavior.
-
-## Validation
-
-Validated:
-
-- CLI
-- Desktop UI
-- Decision Pipeline
-- Memory Engine initialization
-- Provider Architecture
-- Multi-provider fallback
-
-## Architecture Impact
-
-New architectural ownership:
-
-Application
-    ↓
-GEXOBrain
- ├── Dispatcher
- ├── DecisionEngine
- ├── MemoryManager
- └── BehaviorEngine
-
-MemoryManager
- ├── Working Memory
- ├── Short Memory
- └── Long Memory
-
-DecisionEngine receives immutable MemorySnapshot objects only.
-
-## Public APIs
-
-No public APIs were removed.
-
-Desktop, CLI, Voice and future Mobile interfaces remain compatible.
-
-## Next Sprint
-
-Sprint 4.4
-
-Planner & Tool Registry Integration
+## 10. Currently Implemented Foundation
+*   **Memory**
+*   **Notes**
+*   **Tasks**
+*   **Reminders**
+*   **File operations**
+*   **Application operations**
+*   **Intent routing**
+*   **AI planning** (Structured JSON planning with JSON extraction, validation, retry/error handling, and tool-registry validation.)
+*   **Tool registry**
+*   **Tool execution**
+*   **Response handling**
+*   **CLI development interface**
+
+## 11. Next Brain Architecture (Planned Progression)
+1. **Emotion State Engine** *(Current Active Sprint)*
+2. **Personality Engine**
+3. **Decision Engine**
+4. **Expression Engine**
+5. **Voice Command Integration**
+6. **Mobile / Robotic Integration**
+7. **Physical Embodiment**
+
+## 12. Sprint History
+
+### Sprint: Command/Tool Stabilization
+**Status:** Completed
+**Result:** The pipeline was rigorously enforced to execute tools deterministically. Integrated `ToolResult` across all legacy systems (memory, tasks, notes, reminders). Solidified the `AIPlanner` with robust balanced-brace parsing, strict Registry validation, and `PlannerError` fallback decoupling.
+
+### Sprint: Emotion State Engine
+**Status:** READY TO BEGIN
+**Purpose:** Create a controlled internal emotional state representation owned by G-EXO. It is PLANNED, not implemented. The LLM must not own persistent emotional state. Future Personality, Decision, Expression and hardware systems must consume explicit G-EXO state/interfaces.
