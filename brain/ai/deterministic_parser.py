@@ -63,7 +63,23 @@ class DeterministicParser:
             # =====================================================
             # REMINDERS
             # =====================================================
-            (re.compile(r"^(?:show reminders|list reminders)$", re.IGNORECASE),
+
+            (re.compile(
+                 r"^set reminder (\S+) (\S+)(?: (.*))?$",
+                 re.IGNORECASE
+            ),
+             lambda m: {
+                     "intent": "reminders",
+                     "tool": "reminders",
+                     "action": "add",
+                     "arguments": {
+                            "date": m.group(1).strip(),
+                            "time": m.group(2).strip(),
+                            "message": (m.group(3) or "").strip()
+                     }
+           }),
+
+            (re.compile(r"^(?:show reminder(?:s)?|list reminder(?:s)?)$", re.IGNORECASE),
              lambda m: {"intent": "reminders", "tool": "reminders", "action": "show", "arguments": {}}),
              
             (re.compile(r"^(?:complete reminder|finish reminder) (\d+)$", re.IGNORECASE),

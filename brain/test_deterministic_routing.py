@@ -72,6 +72,14 @@ def run_tests():
     assert plan["action"] == "clear"
     assert plan["arguments"] == {}
 
+    plan = parser.parse("set reminder tomorrow 9am")
+    assert plan["intent"] == "reminders"
+    assert plan["tool"] == "reminders"
+    assert plan["action"] == "add"
+    assert plan["arguments"]["date"] == "tomorrow"
+    assert plan["arguments"]["time"] == "9am"
+    assert plan["arguments"]["message"] == ""
+
     print("[PASS] Deterministic Parser Contracts Verified.")
 
     print("\n--- ASSERTING INTENT ROUTING ---\n")
@@ -88,7 +96,7 @@ def run_tests():
     # Assert non-deterministic behavior is preserved
     assert router.route("what does task management mean?")["route"] == "planner"
     assert router.route("Can you show me my tasks?")["route"] == "planner"
-    assert router.route("set reminder tomorrow 9am")["route"] == "planner"
+    assert router.route("set reminder tomorrow 9am")["route"] == "deterministic"
     assert router.route("hello")["route"] == "chat"
     assert router.route("25 * 25")["route"] == "calculator"
     print("[PASS] Intent Routing Verified.")
@@ -99,6 +107,7 @@ def run_tests():
             "show tasks", 
             "show notes", 
             "show reminders",
+            "set reminder tomorrow 9am",
             "delete task 1",
             "delete note 1",
             "delete reminder 1",
