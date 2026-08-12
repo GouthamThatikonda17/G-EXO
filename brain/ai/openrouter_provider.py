@@ -1,7 +1,7 @@
-"""
+﻿"""
 =========================================================
 Project G-EXO OpenRouter AI Provider
-Version : 1.2
+Version : 1.3
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
@@ -10,7 +10,9 @@ import os
 import json
 import urllib.request
 import urllib.error
+import socket
 from dotenv import load_dotenv
+
 from ai.prompts import SYSTEM_PROMPT, PLANNER_PROMPT
 from ai.provider import AIProvider
 from ai.exceptions import (
@@ -23,17 +25,16 @@ from ai.exceptions import (
 
 load_dotenv()
 
-
 class OpenRouterProvider(AIProvider):
     def __init__(self):
         self.api_key = os.getenv("OPENROUTER_API_KEY")
         if not self.api_key:
             raise ProviderAuthenticationError("OPENROUTER_API_KEY not found in environment configuration.")
-        
+
         self.model = os.getenv("OPENROUTER_MODEL")
         if not self.model:
             raise ProviderModelNotFoundError("OPENROUTER_MODEL not found in environment configuration.")
-            
+
         self.url = "https://openrouter.ai/api/v1/chat/completions"
 
     def _call_api(self, messages: list, expect_json: bool = False) -> str:
@@ -41,7 +42,7 @@ class OpenRouterProvider(AIProvider):
             "model": self.model,
             "messages": messages
         }
-        
+
         if expect_json:
             payload["response_format"] = {"type": "json_object"}
 
@@ -51,10 +52,10 @@ class OpenRouterProvider(AIProvider):
             "HTTP-Referer": "https://github.com/G-EXO",
             "X-Title": "G-EXO"
         }
-        
+
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(self.url, data=data, headers=headers, method="POST")
-        
+
         try:
             with urllib.request.urlopen(req, timeout=30) as response:
                 res_data = json.loads(response.read().decode("utf-8"))
@@ -71,7 +72,11 @@ class OpenRouterProvider(AIProvider):
             else:
                 raise ProviderNetworkError(f"HTTP Error {e.code}: {e}")
         except urllib.error.URLError as e:
+            if isinstance(e.reason, (socket.timeout, TimeoutError)):
+                raise ProviderNetworkError(f"Timeout Error: {e}")
             raise ProviderNetworkError(f"Network Error: {e}")
+        except (socket.timeout, TimeoutError) as e:
+            raise ProviderNetworkError(f"Timeout Error: {e}")
         except Exception as e:
             raise ProviderError(f"Unknown Error: {e}")
 

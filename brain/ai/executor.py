@@ -1,13 +1,13 @@
-"""
+﻿"""
 =========================================================
 Project G-EXO AI Executor
-Version : 3.3
+Version : 3.5
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
 
 from tools.registry import ToolRegistry
-
+from ai.exceptions import PlannerError
 
 class AIExecutor:
     def __init__(self):
@@ -16,30 +16,30 @@ class AIExecutor:
     def execute(self, plan: dict):
         tool = plan.get("tool")
         action = plan.get("action")
-        arguments = plan.get("arguments")
-
-        if not isinstance(arguments, dict):
-            arguments = {}
-
-        # Fallback for flattened LLM JSON outputs where the model 
-        # hallucinates arguments at the root level.
-        if not arguments:
-            reserved_keys = {"intent", "tool", "action", "arguments"}
-            arguments = {k: v for k, v in plan.items() if k not in reserved_keys}
-        else:
-            # Prevent reserved keys (like 'action') from duplicating in kwargs
-            arguments = {
-                k: v for k, v in arguments.items() 
-                if k not in {"intent", "tool", "action", "arguments"}
-            }
 
         # No tool required
         if tool is None:
             return None
 
-        # Execute selected tool via robust keyword mapping
-        return self.registry.execute(
-            tool,
-            action,
-            **arguments
-        )
+        # Strict validation: Rejects flattened plans and missing keys entirely.
+        # No silent creation of empty {} dictionaries.
+        if "arguments" not in plan:
+            raise PlannerError("Planner output is missing 'arguments'.")
+
+        arguments = plan.get("arguments")
+        if not isinstance(arguments, dict):
+            raise PlannerError("Planner output field 'arguments' must be an object.")
+
+        try:
+            # Execute selected tool via strict keyword mapping.
+            # No positional overrides or fallback injections are permitted.
+            return self.registry.execute(
+                tool,
+                action,
+                **arguments
+            )
+        except ValueError as e:
+            # Safely trap Level 2 contract validation failures
+            # (e.g., missing, unknown, or empty required arguments)
+            # and surface them cleanly as deterministic PlannerErrors.
+            raise PlannerError(str(e))

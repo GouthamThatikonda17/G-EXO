@@ -1,7 +1,7 @@
-"""
+﻿"""
 =========================================================
 Project G-EXO Gemini AI Provider
-Version : 4.3
+Version : 4.4
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
@@ -9,6 +9,8 @@ Developer : Thatikonda Goutham Teja
 import os
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
+
 from ai.prompts import SYSTEM_PROMPT, PLANNER_PROMPT
 from ai.provider import AIProvider
 from ai.exceptions import (
@@ -21,17 +23,16 @@ from ai.exceptions import (
 
 load_dotenv()
 
-
 class GeminiProvider(AIProvider):
     def __init__(self):
         api_key = os.getenv("GEMINI_API_KEY")
         if not api_key:
             raise ProviderAuthenticationError("GEMINI_API_KEY not found in environment configuration.")
-        
+
         self.model = os.getenv("GEMINI_MODEL")
         if not self.model:
             raise ProviderModelNotFoundError("GEMINI_MODEL not found in environment configuration.")
-            
+
         self.client = genai.Client(api_key=api_key)
 
     def _translate_error(self, e: Exception):
@@ -70,6 +71,9 @@ class GeminiProvider(AIProvider):
             response = self.client.models.generate_content(
                 model=self.model,
                 contents=f"{PLANNER_PROMPT}\n\nUser: {prompt}",
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                )
             )
             if not response or not response.text:
                 raise ProviderError("Gemini returned an empty text plan.")

@@ -1,7 +1,7 @@
-"""
+﻿"""
 =========================================================
 Project G-EXO AI Provider Exceptions
-Version : 1.0
+Version : 1.1
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
@@ -24,4 +24,8 @@ class ProviderModelNotFoundError(ProviderError):
 
 class ProviderNetworkError(ProviderError):
     """Raised when a network timeout or connection failure occurs."""
+    pass
+
+class PlannerError(Exception):
+    """Raised when the AI Planner fails to generate or extract a valid execution plan."""
     pass

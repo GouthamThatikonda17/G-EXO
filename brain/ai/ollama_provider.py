@@ -1,7 +1,7 @@
-"""
+﻿"""
 =========================================================
 Project G-EXO Ollama AI Provider
-Version : 1.2
+Version : 1.3
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
@@ -10,7 +10,9 @@ import os
 import json
 import urllib.request
 import urllib.error
+import socket
 from dotenv import load_dotenv
+
 from ai.prompts import SYSTEM_PROMPT, PLANNER_PROMPT
 from ai.provider import AIProvider
 from ai.exceptions import (
@@ -23,17 +25,16 @@ from ai.exceptions import (
 
 load_dotenv()
 
-
 class OllamaProvider(AIProvider):
     def __init__(self):
         self.host = os.getenv("OLLAMA_HOST")
         if not self.host:
             raise ProviderNetworkError("OLLAMA_HOST not found in environment configuration.")
-            
+
         self.model = os.getenv("OLLAMA_MODEL")
         if not self.model:
             raise ProviderModelNotFoundError("OLLAMA_MODEL not found in environment configuration.")
-        
+
         # Fast fail connectivity check during lazy initialization
         url = f"{self.host}/api/tags"
         try:
@@ -42,7 +43,11 @@ class OllamaProvider(AIProvider):
                 if resp.status != 200:
                     raise ProviderNetworkError(f"Ollama server returned non-200 status: {resp.status}")
         except urllib.error.URLError as e:
+            if isinstance(e.reason, (socket.timeout, TimeoutError)):
+                raise ProviderNetworkError(f"Ollama server timeout at {self.host}: {e}")
             raise ProviderNetworkError(f"Ollama server is unavailable at {self.host}: {e}")
+        except (socket.timeout, TimeoutError) as e:
+            raise ProviderNetworkError(f"Ollama server timeout at {self.host}: {e}")
         except Exception as e:
             raise ProviderError(f"Ollama initialization failed: {e}")
 
@@ -57,7 +62,11 @@ class OllamaProvider(AIProvider):
             else:
                 raise ProviderNetworkError(f"HTTP Error {e.code}: {e}")
         elif isinstance(e, urllib.error.URLError):
+            if isinstance(e.reason, (socket.timeout, TimeoutError)):
+                raise ProviderNetworkError(f"Timeout Error: {e}")
             raise ProviderNetworkError(f"Network Error: {e}")
+        elif isinstance(e, (socket.timeout, TimeoutError)):
+            raise ProviderNetworkError(f"Timeout Error: {e}")
         else:
             raise ProviderError(f"Unknown Error: {e}")
 
@@ -73,7 +82,7 @@ class OllamaProvider(AIProvider):
         }
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-        
+
         try:
             with urllib.request.urlopen(req, timeout=30) as response:
                 res_data = json.loads(response.read().decode("utf-8"))
@@ -96,7 +105,7 @@ class OllamaProvider(AIProvider):
         }
         data = json.dumps(payload).encode("utf-8")
         req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-        
+
         try:
             with urllib.request.urlopen(req, timeout=30) as response:
                 res_data = json.loads(response.read().decode("utf-8"))
