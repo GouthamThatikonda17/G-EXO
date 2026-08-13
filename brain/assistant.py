@@ -1,13 +1,13 @@
-# brain/assistant.py
+﻿# brain/assistant.py
 """
 =========================================================
 Project G-EXO Brain
-Version : 4.4
+Version : 4.6
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
-
 import uuid
+
 from behavior.behavior_engine import BehaviorEngine
 from core.dispatcher import Dispatcher
 from core.request import Request
@@ -16,9 +16,9 @@ from memory.memory_manager import MemoryManager
 from memory.models import Memory
 from memory.memory_types import MemoryType
 from decision.decision_engine import DecisionEngine
+from emotion.engine import EmotionEngine
+from personality.engine import PersonalityEngine
 from logger import log
-
-
 
 class GEXOBrain:
     """
@@ -36,6 +36,9 @@ class GEXOBrain:
         self.memory_manager = MemoryManager()
         self.decision_engine = DecisionEngine()
         self.behavior = BehaviorEngine()
+        self.emotion_engine = EmotionEngine()
+        self.personality_engine = PersonalityEngine()
+
     # =====================================================
     # MEMORY HELPERS
     # =====================================================
@@ -81,26 +84,34 @@ class GEXOBrain:
         # 2. Extract Immutable Memory Snapshot
         memory_snapshot = self.memory_manager.get_snapshot()
 
-        # 3. Decision Engine evaluation
+        # 3. Emotion and Personality Cognitive Pipeline
+        raw_emotion = self.emotion_engine.update(request)
+        modulated_emotion = self.personality_engine.modulate(raw_emotion)
+        personality_state = self.personality_engine.state
+
+        # 4. Integrate Cognitive Emotion into Behavior Engine
+        self.behavior.update_cognitive_state(modulated_emotion)
+
+        # 5. Decision Engine evaluation
         decision = self.decision_engine.decide(
             request=request,
             memory_snapshot=memory_snapshot,
+            emotion=modulated_emotion,
+            personality=personality_state,
         )
 
-        # Consume the decision result (Logging it since the existing
-        # Dispatcher API does not currently accept the DecisionResult)
         log(
             f"[Brain] Decision Evaluated: Skill={decision.skill}, "
             f"Action={decision.action}, Priority={decision.priority.value}"
         )
 
-        # 4. Dispatch Request through existing core Pipeline
+        # 6. Dispatch Request through existing core Pipeline
         response = self.dispatcher.dispatch(
             request,
             decision,
         )
 
-        # 5. Record Assistant Response to Memory Engine
+        # 7. Record Assistant Response to Memory Engine
         res_memory = self._create_response_memory(response)
         self.memory_manager.working_memory().add(res_memory)
 

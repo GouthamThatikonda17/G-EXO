@@ -1,16 +1,17 @@
-# brain/decision/decision_engine.py
+﻿# brain/decision/decision_engine.py
 """
 =========================================================
 Project G-EXO Decision Engine
-Version : 2.1
+Version : 2.2
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
-
 from core.request import Request
 from ai.intent_router import IntentRouter
 from memory.models import MemorySnapshot
 from decision.decision_context import DecisionContext
+from emotion.models import EmotionState
+from personality.models import PersonalityState
 from decision.decision_models import (
     DecisionPriority,
     DecisionRequest,
@@ -27,7 +28,6 @@ class DecisionEngine:
     - Estimate priority
     - Choose a skill
     - Explain the decision
-
     Future versions will integrate:
         - Memory
         - Emotion
@@ -43,11 +43,12 @@ class DecisionEngine:
         self,
         request: Request,
         memory_snapshot: MemorySnapshot,
+        emotion: EmotionState | None = None,
+        personality: PersonalityState | None = None,
     ) -> DecisionResult:
         # =====================================================
         # INTENT EVALUATION
         # =====================================================
-        # Preserving existing behavior by utilizing the intent router
         route_data = self.router.route(request.message)
         intent = route_data.get("route", "unknown")
 
@@ -63,16 +64,17 @@ class DecisionEngine:
         # =====================================================
         # CONSTRUCT CONTEXT
         # =====================================================
-        # NOTE: DecisionContext construction securely packages the memory state.
-        # This serves as intentional preparation work for future reasoning.
-        # In upcoming sprints, this context will be evaluated directly against
-        # system rules to adjust execution paths and LLM prompts.
         context = DecisionContext(
             user_input=decision_request.user_input,
             source=decision_request.source,
             working_memory=list(memory_snapshot.working),
             short_memory=list(memory_snapshot.short),
             long_memory=list(memory_snapshot.long),
+            emotion_state=emotion,
+            personality_state=personality,
+            detected_emotion=emotion.categorical if emotion else None,
+            emotion_confidence=1.0 if emotion else 0.0,
+            personality_mode=personality.mode if personality else "default",
         )
 
         # =====================================================
@@ -80,13 +82,12 @@ class DecisionEngine:
         # =====================================================
         priority = self._estimate_priority(decision_request)
         skill = self._select_skill(decision_request.intent)
-        action = "evaluate"  # Action is kept strictly independent from intent
+        action = "evaluate"
         reason = (
             f"Selected '{skill}' "
             f"for intent '{decision_request.intent}'."
         )
 
-        # TODO: Adjust confidence based on `context` memory states in future sprints
         confidence = 1.0
 
         return DecisionResult(
@@ -115,10 +116,7 @@ class DecisionEngine:
             "heart",
             "ambulance",
         )
-        if any(
-            keyword in text
-            for keyword in emergency_keywords
-        ):
+        if any(keyword in text for keyword in emergency_keywords):
             return DecisionPriority.CRITICAL
 
         return DecisionPriority.NORMAL

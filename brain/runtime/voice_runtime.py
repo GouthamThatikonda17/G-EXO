@@ -1,11 +1,10 @@
-"""
+﻿"""
 =========================================================
 Project G-EXO Voice Runtime
-Version : 1.2
+Version : 1.3
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
-
 from behavior.face_state import FaceState
 from wakeword.listener import MicrophoneListener
 from wakeword.detector import WakeWordDetector
@@ -13,15 +12,20 @@ from voice.speech_to_text import SpeechToText
 from voice.text_to_speech import TextToSpeech
 from assistant import GEXOBrain
 
-
 class VoiceRuntime:
     def __init__(self, brain: GEXOBrain):
         self.brain = brain
         self.behavior = self.brain.behavior
+
         self.listener = MicrophoneListener()
         self.detector = WakeWordDetector()
         self.stt = SpeechToText()
         self.tts = TextToSpeech()
+
+        # Securely bind TTS physical lifecycle events to visual behavior engine.
+        self.tts.on_speech_start = lambda: self.behavior.set_state(FaceState.SPEAKING)
+        self.tts.on_speech_end = lambda: self.behavior.set_state(FaceState.IDLE)
+
         self.listener.set_callback(
             self.detector.process
         )
@@ -60,25 +64,26 @@ class VoiceRuntime:
         self.behavior.set_state(
             FaceState.LISTENING
         )
+
         text = self.stt.listen()
+
         if not text:
             self.behavior.set_state(
                 FaceState.IDLE
             )
             return
+
         self.behavior.set_state(
             FaceState.THINKING
         )
+
         response = self.brain.process(
             text,
             source="voice",
         )
-        self.behavior.set_state(
-            FaceState.SPEAKING
-        )
+
+        # Remove hardcoded SPEAKING/IDLE calls.
+        # Hardware audio execution completes the physical state loop inherently via callbacks.
         self.tts.speak(
             response.message
-        )
-        self.behavior.set_state(
-            FaceState.IDLE
         )

@@ -1,10 +1,10 @@
 """
 =========================================================
-Project G-EXO Desktop Application Entry Version : 1.4
+Project G-EXO Desktop Application Entry
+Version : 2.0
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
-
 import os
 import sys
 
@@ -26,20 +26,18 @@ from main_window import MainWindow
 from themes.dark_theme import DARK_THEME
 from runtime.application import Application
 
-
 def main():
     app = QApplication(sys.argv)
     app.setStyleSheet(DARK_THEME)
-    
-    # =====================================================
-    # Application Composition Root Bootstrap
-    # =====================================================
-    app_root = Application()
-    
-    window = MainWindow(app_root.brain)
-    window.show()
-    sys.exit(app.exec())
 
+    # 1. Enforce Composition Root Ownership
+    app_root = Application()
+
+    # 2. Inject Shared Brain into Platform Frontend
+    window = MainWindow(brain=app_root.brain)
+    window.show()
+
+    sys.exit(app.exec())
 
 if __name__ == "__main__":
     main()
