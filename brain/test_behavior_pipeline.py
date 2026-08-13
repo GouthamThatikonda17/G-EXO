@@ -1,7 +1,7 @@
-"""
+﻿"""
 =========================================================
 Project G-EXO Behavior Pipeline Tests
-Version : 1.7
+Version : 2.2
 Developer : Thatikonda Goutham Teja
 =========================================================
 """
@@ -24,8 +24,9 @@ if _desktop_dir not in sys.path:
     sys.path.insert(0, _desktop_dir)
 # --------------------------------------------------------------
 
+import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 # Explicitly import main_window directly since desktop/ is in sys.path
 import main_window
@@ -35,6 +36,7 @@ from behavior.face_state import FaceState
 from emotion.models import EmotionState
 from voice.text_to_speech import TextToSpeech
 from assistant import GEXOBrain
+from core.response import Response
 
 
 class TestBehaviorPipeline(unittest.TestCase):
@@ -176,8 +178,10 @@ class TestBehaviorPipeline(unittest.TestCase):
         finally:
             tts.shutdown()
 
-    def test_desktop_shared_state(self):
+    def test_desktop_shared_state_and_ui_layout(self):
         from PySide6.QtWidgets import QApplication, QWidget
+        from PySide6.QtGui import QKeyEvent, QCloseEvent
+        from PySide6.QtCore import Qt
         app = QApplication.instance() or QApplication(sys.argv)
 
         # Lightweight PySide6 double replacing the heavy visual engine
@@ -191,9 +195,129 @@ class TestBehaviorPipeline(unittest.TestCase):
             brain = GEXOBrain()
             window = MainWindow(brain=brain)
 
+            window.show()
+            app.processEvents()
             # The Window MUST consume the exact injected Brain's behavior Engine
             self.assertIs(window.brain, brain)
             self.assertIs(window.behavior, brain.behavior)
+
+            # Verify Phase 4 requirements: Developer Console is completely hidden on launch
+            self.assertFalse(window.dev_console.isVisible())
+
+            # Assert Developer Mode Hotkey (F12) successfully surfaces the hidden interface
+            event = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key_F12, Qt.KeyboardModifier.NoModifier)
+            window.keyPressEvent(event)
+            self.assertTrue(window.dev_console.isVisible())
+
+            # Assert Toggle functionality cleanly hides the UI component back off-screen
+            event = QKeyEvent(QKeyEvent.Type.KeyPress, Qt.Key_QuoteLeft, Qt.KeyboardModifier.NoModifier)
+            window.keyPressEvent(event)
+            self.assertFalse(window.dev_console.isVisible())
+
+            window.closeEvent(QCloseEvent())
+
+    def test_repeated_message_lifecycle(self):
+        """
+        Validates the Phase 3 fix: ensuring sequential messaging creates new background
+        threads smoothly without relying on stale QThread references or premature cleanup.
+        """
+        from PySide6.QtWidgets import QApplication, QWidget
+        from PySide6.QtGui import QCloseEvent
+        app = QApplication.instance() or QApplication(sys.argv)
+
+        class FakeScene(QWidget):
+            def set_state(self, state):
+                pass
+
+        with patch('main_window.GEXOScene', new=FakeScene):
+            from main_window import MainWindow
+            brain = GEXOBrain()
+
+            def fake_process_1(*args, **kwargs):
+                time.sleep(0.1)
+                return Response(success=True, message="Test 1")
+
+            brain.process = MagicMock(side_effect=fake_process_1)
+
+            window = MainWindow(brain=brain)
+
+            # ----------------------------------------------------
+            # A. First message
+            # ----------------------------------------------------
+            window.message_input.input.setText("Message 1")
+            window._send_message()
+            self.assertIsNotNone(window.thread)
+            first_thread = window.thread
+
+            # D. Attempt second message while first is genuinely running
+            # Because self.thread is undeniably not None, the UI correctly rejects the input.
+            with patch.object(window.thread, 'isRunning', return_value=True):
+                window.message_input.input.setText("Concurrent Message")
+                window._send_message()
+            self.assertEqual(window.thread, first_thread) # Thread did not change
+
+            # E. Verify actual thread resolution via Qt Event Loop
+            timeout = time.time() + 2.0
+            while window.thread is not None and time.time() < timeout:
+                app.processEvents()
+
+            self.assertIsNone(window.thread) # References correctly clear ONLY upon completion
+            self.assertTrue(window.message_input.input.isEnabled())
+
+            # ----------------------------------------------------
+            # B. Second message starts fresh (Simulating failure context)
+            # ----------------------------------------------------
+            def fake_process_2(*args, **kwargs):
+                time.sleep(0.1)
+                raise Exception("Simulated Error")
+
+            brain.process = MagicMock(side_effect=fake_process_2)
+            window.message_input.input.setText("Message 2")
+            window._send_message()
+            self.assertIsNotNone(window.thread)
+            second_thread = window.thread
+            self.assertNotEqual(second_thread, first_thread)
+
+            timeout = time.time() + 2.0
+            while window.thread is not None and time.time() < timeout:
+                app.processEvents()
+
+            # F. Worker failure safely resolves thread states
+            self.assertIsNone(window.thread)
+            self.assertTrue(window.message_input.input.isEnabled())
+
+            # ----------------------------------------------------
+            # C. Third message (Proof of continued stability)
+            # ----------------------------------------------------
+            def fake_process_3(*args, **kwargs):
+                time.sleep(0.1)
+                return Response(success=True, message="Test 3")
+
+            brain.process = MagicMock(side_effect=fake_process_3)
+            window.message_input.input.setText("Message 3")
+            window._send_message()
+            self.assertIsNotNone(window.thread)
+
+            timeout = time.time() + 2.0
+            while window.thread is not None and time.time() < timeout:
+                app.processEvents()
+
+            self.assertIsNone(window.thread)
+
+            # ----------------------------------------------------
+            # G. Close Event handles active thread safely
+            # ----------------------------------------------------
+            def fake_process_4(*args, **kwargs):
+                time.sleep(0.1)
+                return Response(success=True, message="Test 4")
+
+            brain.process = MagicMock(side_effect=fake_process_4)
+            window.message_input.input.setText("Message 4")
+            window._send_message()
+            self.assertIsNotNone(window.thread)
+
+            window.closeEvent(QCloseEvent())
+            self.assertIsNone(window.thread)
 
     def test_process_preserves_pipeline(self):
         brain = GEXOBrain()
