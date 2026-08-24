@@ -16,7 +16,8 @@ from memory.memory_manager import MemoryManager
 from memory.models import Memory
 from memory.memory_types import MemoryType
 from decision.decision_engine import DecisionEngine
-from emotion.engine import EmotionEngine
+from emotion.emotion_engine import EmotionEngine
+from emotion.models import EmotionEvent
 from personality.engine import PersonalityEngine
 from logger import log
 
@@ -85,7 +86,10 @@ class GEXOBrain:
         memory_snapshot = self.memory_manager.get_snapshot()
 
         # 3. Emotion and Personality Cognitive Pipeline
-        raw_emotion = self.emotion_engine.update(request)
+        # Emotion engine is decoupled from raw text strings.
+        # Operational emotion feedback is explicitly deferred to a future post-execution pipeline sprint.
+        raw_emotion = self.emotion_engine.update(EmotionEvent.NEUTRAL_INTERACTION)
+
         modulated_emotion = self.personality_engine.modulate(raw_emotion)
         personality_state = self.personality_engine.state
 
@@ -99,7 +103,6 @@ class GEXOBrain:
             emotion=modulated_emotion,
             personality=personality_state,
         )
-
         log(
             f"[Brain] Decision Evaluated: Skill={decision.skill}, "
             f"Action={decision.action}, Priority={decision.priority.value}"
