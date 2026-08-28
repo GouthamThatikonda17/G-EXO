@@ -1,16 +1,33 @@
-from fastapi import APIRouter
-
-from ai.router import AIRouter
+# brain/api/routes/assistant.py
+from fastapi import APIRouter, Request
 from api.schemas.chat import ChatRequest, ChatResponse
+import asyncio
 
 router = APIRouter()
 
-ai = AIRouter()
-
-
 @router.post("/chat", response_model=ChatResponse)
-def chat(request: ChatRequest):
+async def chat(request_body: ChatRequest, request: Request):
+    brain = request.app.state.brain
 
-    response = ai.chat(request.message)
+    # Execute off the event loop as brain.process is synchronous and heavy
+    response = await asyncio.to_thread(
+        brain.process,
+        request_body.message,
+        source=request_body.source
+    )
 
-    return ChatResponse(response=response)
+    # Extract state safely
+    face_state = "idle"
+    if brain.behavior.get_state():
+        face_state = brain.behavior.get_state().value
+
+    emotion = "neutral"
+    if brain.emotion_engine.state and brain.emotion_engine.state.categorical:
+        emotion = brain.emotion_engine.state.categorical.value
+
+    return ChatResponse(
+        success=response.success,
+        response=response.message,
+        face_state=face_state,
+        emotion=emotion
+    )
