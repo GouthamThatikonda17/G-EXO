@@ -1,4 +1,4 @@
-# brain/runtime/voice_runtime.py
+﻿# brain/runtime/voice_runtime.py
 """
 =========================================================
 Project G-EXO Voice Runtime
@@ -225,15 +225,28 @@ class VoiceRuntime:
         self._wakeword_worker_thread.start()
         self._voice_pipeline_thread.start()
 
-    def stop(self):
-        """Cleanly stops the voice runtime, worker threads, and audio streams with bounded joins."""
+    def shutdown(self):
+        """Cleanly shuts down the voice runtime and all owned voice workers."""
         print("[VoiceRuntime] Stopping voice runtime...")
+
         self._shutdown_event.set()
-        self._utterance_trigger.set()  # Unblock thread wait
+        self._utterance_trigger.set()
+
+        # Stop accepting/processing microphone audio first.
         self.listener.stop()
+
+        # Stop current/pending TTS immediately.
         self.tts.shutdown()
 
+        # Bound worker shutdown so a broken dependency cannot hang the process.
         if self._wakeword_worker_thread.is_alive():
             self._wakeword_worker_thread.join(timeout=1.0)
+
         if self._voice_pipeline_thread.is_alive():
             self._voice_pipeline_thread.join(timeout=1.0)
+
+        self.behavior.set_state(FaceState.IDLE)
+
+    def stop(self):
+        """Backward-compatible alias for shutdown()."""
+        self.shutdown()
