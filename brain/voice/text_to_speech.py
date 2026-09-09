@@ -1,4 +1,4 @@
-# brain/voice/text_to_speech.py
+﻿# brain/voice/text_to_speech.py
 """
 =========================================================
 Project G-EXO Text To Speech
@@ -278,3 +278,57 @@ class TextToSpeech:
         raise RuntimeError(
             "No supported audio player found."
         )
+    def synthesize_bytes(self, text: str) -> bytes:
+        """
+        Synchronously generates and returns WAV audio bytes strictly for API/Client usage.
+        Does not perform audio playback, does not touch playback queues, and does not fire
+        speech lifecycle callbacks.
+        """
+        if not text or not text.strip():
+            raise ValueError("Text cannot be empty.")
+
+        if not self.voice_model.exists():
+            raise FileNotFoundError(
+                f"Voice model not found:\n{self.voice_model}"
+            )
+        if not self.voice_config.exists():
+            raise FileNotFoundError(
+                f"Voice config not found:\n{self.voice_config}"
+            )
+        piper = self._find_piper()
+        if piper is None:
+            raise FileNotFoundError(
+                "Unable to locate Piper executable."
+            )
+
+        with tempfile.NamedTemporaryFile(
+            suffix=".wav",
+            delete=False,
+        ) as wav_file:
+            wav_path = Path(wav_file.name)
+
+        try:
+            command = [
+                str(piper),
+                "--model",
+                str(self.voice_model),
+                "--output_file",
+                str(wav_path),
+            ]
+            process = subprocess.run(
+                command,
+                input=text.strip(),
+                text=True,
+                capture_output=True,
+            )
+            if process.returncode != 0:
+                raise RuntimeError(
+                    process.stderr.strip() or "Piper synthesis failed."
+                )
+
+            return wav_path.read_bytes()
+        finally:
+            try:
+                wav_path.unlink(missing_ok=True)
+            except Exception:
+                pass
